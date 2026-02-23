@@ -1,0 +1,458 @@
+---
+const work = [
+  { type: "Code", title: "Dashboard Redesign", desc: "UI overhaul & metrics boost.", tag: "React · .NET", href: "#", year: "2026" },
+  { type: "Photo", title: "Sunset Peaks", desc: "Series: High Desert", tag: "Landscape", href: "#", year: "2025" },
+  { type: "Writing", title: "Performance Notes", desc: "Shipping fast without shipping bugs.", tag: "Web perf", href: "#", year: "2026" },
+  { type: "Experiment", title: "Retro Synthwave", desc: "3D + shaders + nostalgia.", tag: "WebGL", href: "#", year: "2025" },
+  { type: "Code", title: "Data Viz Tool", desc: "Interactive analytics platform.", tag: "D3 · API", href: "#", year: "2025" },
+  { type: "Photo", title: "Night Sky", desc: "Clean astrophotography set.", tag: "Astro", href: "#", year: "2026" }
+];
+---
+
+<html lang="en" data-theme="dark">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>jonesyco</title>
+    <meta name="description" content="Code, photos, and creative experiments." />
+    <link rel="icon" href="/favicon.svg" />
+    <style>
+      :root{
+        --bg:#0b0d10; --bg2:#0e1220; --text:#e9eef7; --muted:#a7b0c0;
+        --card:rgba(255,255,255,.06); --card2:rgba(255,255,255,.09);
+        --stroke:rgba(255,255,255,.12); --shadow: 0 20px 70px rgba(0,0,0,.35);
+        --accent:#7CFFB2; --accent2:#79A7FF;
+        --grid:rgba(255,255,255,.07);
+      }
+      html[data-theme="light"]{
+        --bg:#fbfbfd; --bg2:#f2f4ff; --text:#0b0d10; --muted:#4b5566;
+        --card:rgba(10,10,20,.06); --card2:rgba(10,10,20,.09);
+        --stroke:rgba(10,10,20,.12); --shadow: 0 20px 70px rgba(0,0,0,.12);
+        --accent:#0ea5e9; --accent2:#7c3aed;
+        --grid:rgba(10,10,20,.08);
+      }
+      *{box-sizing:border-box}
+      body{
+        margin:0; color:var(--text); background: radial-gradient(1200px 800px at 70% 10%, rgba(124,255,178,.12), transparent 60%),
+                                         radial-gradient(900px 700px at 15% 20%, rgba(121,167,255,.10), transparent 55%),
+                                         linear-gradient(180deg, var(--bg), var(--bg2));
+        font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, "Apple Color Emoji","Segoe UI Emoji";
+        min-height:100vh;
+        overflow-x:hidden;
+      }
+      /* subtle “retro studio” grain + scanline hint */
+      body::before{
+        content:"";
+        position:fixed; inset:0; pointer-events:none;
+        background:
+          repeating-linear-gradient(180deg, rgba(255,255,255,.03), rgba(255,255,255,.03) 1px, transparent 2px, transparent 6px);
+        mix-blend-mode: overlay;
+        opacity:.06;
+      }
+      body::after{
+        content:"";
+        position:fixed; inset:-40px; pointer-events:none;
+        background-image: radial-gradient(var(--grid) 1px, transparent 1px);
+        background-size: 26px 26px;
+        transform: rotate(0.001deg);
+        opacity:.12;
+      }
+      a{color:inherit; text-decoration:none}
+      .wrap{max-width:1180px; margin:0 auto; padding:28px 18px 64px}
+      .nav{
+        display:flex; align-items:center; justify-content:space-between;
+        position:sticky; top:0; z-index:20;
+        padding:16px 18px; margin:-28px -18px 22px;
+        backdrop-filter: blur(10px);
+        background: linear-gradient(180deg, rgba(0,0,0,.35), transparent);
+        border-bottom: 1px solid rgba(255,255,255,.06);
+      }
+      html[data-theme="light"] .nav{
+        background: linear-gradient(180deg, rgba(255,255,255,.65), transparent);
+        border-bottom: 1px solid rgba(10,10,20,.08);
+      }
+      .brand{font-weight:700; letter-spacing:.02em}
+      .links{display:flex; gap:16px; align-items:center}
+      .pill{
+        padding:10px 12px; border:1px solid var(--stroke);
+        border-radius:999px; background:var(--card);
+      }
+      .btn{
+        display:inline-flex; gap:10px; align-items:center; justify-content:center;
+        padding:12px 14px; border-radius:12px;
+        border:1px solid var(--stroke);
+        background: linear-gradient(180deg, rgba(255,255,255,.10), rgba(255,255,255,.02));
+        box-shadow: var(--shadow);
+        transition: transform .2s ease, border-color .2s ease, background .2s ease;
+        cursor:pointer;
+      }
+      .btn:hover{transform: translateY(-1px); border-color: rgba(124,255,178,.4)}
+      .btn.primary{
+        background: linear-gradient(135deg, rgba(124,255,178,.24), rgba(121,167,255,.18));
+        border-color: rgba(124,255,178,.35);
+      }
+      .hero{
+        display:grid; grid-template-columns: 1.2fr .8fr;
+        gap:22px; align-items:stretch;
+      }
+      @media (max-width: 980px){ .hero{grid-template-columns:1fr} }
+      .card{
+        border:1px solid var(--stroke); border-radius:22px;
+        background: linear-gradient(180deg, var(--card), rgba(255,255,255,.02));
+        box-shadow: var(--shadow);
+      }
+      .heroLeft{padding:28px}
+      .h1{font-size: clamp(40px, 6vw, 64px); line-height:1.0; margin:0 0 10px}
+      .sub{color:var(--muted); font-size: 18px; line-height:1.5; margin:0 0 18px; max-width: 56ch}
+      .actions{display:flex; gap:12px; flex-wrap:wrap}
+      .badges{display:flex; gap:10px; flex-wrap:wrap; margin-top:18px}
+      .badge{
+        display:inline-flex; gap:8px; align-items:center;
+        padding:8px 10px; border-radius:999px;
+        border:1px solid var(--stroke); background:var(--card2);
+        color:var(--muted); font-size:13px;
+      }
+
+      .heroRight{padding:16px; position:relative; overflow:hidden}
+      .terminal{
+        border-radius:18px;
+        border:1px solid var(--stroke);
+        background: rgba(0,0,0,.25);
+        height:100%;
+        min-height: 260px;
+        overflow:hidden;
+      }
+      html[data-theme="light"] .terminal{background: rgba(255,255,255,.55)}
+      .termTop{
+        display:flex; align-items:center; justify-content:space-between;
+        padding:10px 12px; border-bottom:1px solid var(--stroke);
+        font-size:12px; color:var(--muted);
+      }
+      .dots{display:flex; gap:7px}
+      .dot{width:10px; height:10px; border-radius:999px; border:1px solid var(--stroke); background:var(--card2)}
+      pre{
+        margin:0; padding:14px 14px 18px;
+        font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+        font-size:13px; line-height:1.55;
+        color: var(--text);
+        white-space:pre-wrap;
+      }
+      .kw{color:var(--accent2)}
+      .fn{color:var(--accent)}
+      .str{color:#f59e0b}
+      html[data-theme="light"] .str{color:#b45309}
+
+      .section{margin-top:26px}
+      .sectionHead{
+        display:flex; gap:12px; align-items:center; justify-content:space-between;
+        margin: 26px 0 12px;
+      }
+      .filters{display:flex; gap:10px; flex-wrap:wrap}
+      .chip{
+        padding:9px 12px; border-radius:999px;
+        border:1px solid var(--stroke);
+        background:var(--card);
+        font-size:13px; color:var(--muted);
+        cursor:pointer;
+        transition: transform .15s ease, border-color .15s ease;
+      }
+      .chip[aria-pressed="true"]{color:var(--text); border-color: rgba(124,255,178,.35)}
+      .chip:hover{transform: translateY(-1px)}
+      .grid{
+        display:grid; grid-template-columns: repeat(12, 1fr);
+        gap:14px;
+      }
+      .workCard{
+        grid-column: span 4;
+        padding:16px; min-height: 160px;
+        position:relative; overflow:hidden;
+        transition: transform .2s ease, border-color .2s ease;
+      }
+      .workCard:hover{transform: translateY(-2px); border-color: rgba(121,167,255,.32)}
+      @media (max-width: 980px){ .workCard{grid-column: span 6;} }
+      @media (max-width: 640px){ .workCard{grid-column: span 12;} }
+      .label{
+        display:inline-flex; align-items:center; gap:8px;
+        font-size:12px; color:var(--muted);
+        border:1px solid var(--stroke); background:var(--card2);
+        padding:6px 10px; border-radius:999px;
+      }
+      .title{font-size:18px; margin:10px 0 6px; letter-spacing:.01em}
+      .desc{color:var(--muted); margin:0 0 10px; line-height:1.4}
+      .meta{display:flex; gap:10px; flex-wrap:wrap; color:var(--muted); font-size:12px}
+      .shine{
+        position:absolute; inset:-80px;
+        background: radial-gradient(400px 260px at var(--mx,50%) var(--my,50%), rgba(124,255,178,.18), transparent 60%);
+        opacity:0; transition: opacity .2s ease;
+        pointer-events:none;
+      }
+      .workCard:hover .shine{opacity:1}
+      .footer{
+        margin-top:40px;
+        display:flex; justify-content:space-between; gap:12px; flex-wrap:wrap;
+        color:var(--muted); font-size:13px;
+        border-top:1px solid var(--stroke);
+        padding-top:16px;
+      }
+
+      /* Command palette */
+      dialog{
+        width:min(720px, calc(100vw - 26px));
+        border:1px solid var(--stroke);
+        border-radius:18px;
+        background: linear-gradient(180deg, var(--card2), var(--card));
+        color:var(--text);
+        box-shadow: var(--shadow);
+        padding:0;
+      }
+      dialog::backdrop{background: rgba(0,0,0,.55)}
+      html[data-theme="light"] dialog::backdrop{background: rgba(10,10,20,.22)}
+      .palHead{padding:14px; border-bottom:1px solid var(--stroke)}
+      .palInput{
+        width:100%; padding:12px 12px;
+        border-radius:12px; border:1px solid var(--stroke);
+        background: rgba(0,0,0,.18); color:var(--text);
+        outline:none;
+      }
+      html[data-theme="light"] .palInput{background: rgba(255,255,255,.65)}
+      .palList{max-height: 360px; overflow:auto; padding:10px}
+      .palItem{
+        display:flex; justify-content:space-between; gap:10px;
+        padding:10px 12px; border-radius:12px;
+        border:1px solid transparent;
+        color:var(--muted);
+        cursor:pointer;
+      }
+      .palItem strong{color:var(--text)}
+      .palItem:hover{border-color: rgba(124,255,178,.25); background: rgba(124,255,178,.06)}
+      .kbd{
+        font-family: ui-monospace, monospace;
+        border:1px solid var(--stroke);
+        background: rgba(255,255,255,.06);
+        padding:2px 7px; border-radius:8px;
+        color:var(--muted);
+      }
+    </style>
+  </head>
+
+  <body>
+    <div class="wrap">
+      <header class="nav">
+        <div class="brand">jonesyco</div>
+        <div class="links">
+          <a class="pill" href="#work">Work</a>
+          <a class="pill" href="#about">About</a>
+          <a class="pill" href="#contact">Contact</a>
+          <button class="btn" id="paletteBtn" type="button" title="Command Palette">
+            ⌘K <span class="kbd">Ctrl/⌘ K</span>
+          </button>
+          <button class="btn" id="themeBtn" type="button" title="Toggle theme">🌙</button>
+        </div>
+      </header>
+
+      <main>
+        <section class="hero">
+          <div class="card heroLeft">
+            <h1 class="h1">Code, Photos & Creative Experiments.</h1>
+            <p class="sub">
+              A retro-sleek studio portfolio for shipping software, capturing moments, and building weird (useful) things.
+            </p>
+
+            <div class="actions">
+              <a class="btn primary" href="#work">View Work →</a>
+              <a class="btn" href="#contact">Contact</a>
+            </div>
+
+            <div class="badges">
+              <span class="badge">⚡ Full-Stack</span>
+              <span class="badge">🧩 UI Engineering</span>
+              <span class="badge">📷 Photography</span>
+              <span class="badge">🛰️ Experiments</span>
+            </div>
+          </div>
+
+          <div class="card heroRight">
+            <div class="terminal" aria-label="Interactive code hero">
+              <div class="termTop">
+                <div class="dots">
+                  <span class="dot"></span><span class="dot"></span><span class="dot"></span>
+                </div>
+                <div>problmatik vibes, jonesyco domain</div>
+              </div>
+              <pre><span class="kw">function</span> <span class="fn">createPortfolio</span>() {
+  <span class="kw">return</span> {
+    design: <span class="str">"retro + sleek-studio"</span>,
+    theme: <span class="str">"dark & light"</span>,
+    magic: <span class="str">"fancy JS features"</span>,
+  };
+}</pre>
+            </div>
+          </div>
+        </section>
+
+        <section id="work" class="section">
+          <div class="sectionHead">
+            <h2 style="margin:0; font-size:22px; letter-spacing:.01em;">Featured Work</h2>
+            <div class="filters" id="filters">
+              <button class="chip" data-filter="All" aria-pressed="true">All</button>
+              <button class="chip" data-filter="Code" aria-pressed="false">Code</button>
+              <button class="chip" data-filter="Photo" aria-pressed="false">Photo</button>
+              <button class="chip" data-filter="Writing" aria-pressed="false">Writing</button>
+              <button class="chip" data-filter="Experiment" aria-pressed="false">Experiments</button>
+            </div>
+          </div>
+
+          <div class="grid" id="grid">
+            {work.map((w) => (
+              <a class="card workCard" href={w.href} data-type={w.type}>
+                <div class="shine"></div>
+                <span class="label">{w.type}</span>
+                <div class="title">{w.title}</div>
+                <p class="desc">{w.desc}</p>
+                <div class="meta">
+                  <span>{w.tag}</span>
+                  <span>•</span>
+                  <span>{w.year}</span>
+                </div>
+              </a>
+            ))}
+          </div>
+        </section>
+
+        <section id="about" class="section">
+          <div class="card" style="padding:18px 18px 8px;">
+            <h2 style="margin:0 0 8px; font-size:22px;">About</h2>
+            <p style="margin:0 0 14px; color:var(--muted); line-height:1.55; max-width: 72ch;">
+              This is a starter shell for <strong>jonesyco.github.io</strong>.
+              Next steps: replace the name/voice, swap placeholder work items, and plug in real photo series + case studies.
+            </p>
+          </div>
+        </section>
+
+        <section id="contact" class="section">
+          <div class="card" style="padding:18px;">
+            <h2 style="margin:0 0 8px; font-size:22px;">Contact</h2>
+            <p style="margin:0 0 12px; color:var(--muted);">Drop a note: <strong>you@example.com</strong> (replace this)</p>
+            <div style="display:flex; gap:10px; flex-wrap:wrap;">
+              <a class="btn" href="#">GitHub</a>
+              <a class="btn" href="#">LinkedIn</a>
+              <a class="btn" href="#">Instagram</a>
+            </div>
+          </div>
+        </section>
+
+        <footer class="footer">
+          <span>© {new Date().getFullYear()} jonesyco</span>
+          <span>Tip: press <span class="kbd">Ctrl</span>+<span class="kbd">K</span> for palette</span>
+        </footer>
+      </main>
+    </div>
+
+    <dialog id="palette">
+      <div class="palHead">
+        <input id="palInput" class="palInput" placeholder="Search: work, tags, pages…" autocomplete="off" />
+      </div>
+      <div id="palList" class="palList"></div>
+    </dialog>
+
+    <script>
+      // Theme toggle (persisted)
+      const themeBtn = document.getElementById("themeBtn");
+      const html = document.documentElement;
+
+      const savedTheme = localStorage.getItem("theme");
+      if (savedTheme === "light" || savedTheme === "dark") {
+        html.dataset.theme = savedTheme;
+      }
+      themeBtn.textContent = html.dataset.theme === "dark" ? "🌙" : "☀️";
+
+      themeBtn.addEventListener("click", () => {
+        const next = html.dataset.theme === "dark" ? "light" : "dark";
+        html.dataset.theme = next;
+        localStorage.setItem("theme", next);
+        themeBtn.textContent = next === "dark" ? "🌙" : "☀️";
+      });
+
+      // Filter chips
+      const chips = [...document.querySelectorAll("#filters .chip")];
+      const cards = [...document.querySelectorAll("#grid .workCard")];
+
+      chips.forEach((c) => c.addEventListener("click", () => {
+        chips.forEach(x => x.setAttribute("aria-pressed", "false"));
+        c.setAttribute("aria-pressed", "true");
+        const f = c.dataset.filter;
+        cards.forEach(card => {
+          const t = card.dataset.type;
+          card.style.display = (f === "All" || f === t) ? "" : "none";
+        });
+      }));
+
+      // “Shine” follows mouse for that retro-studio glow
+      cards.forEach((card) => {
+        card.addEventListener("mousemove", (e) => {
+          const r = card.getBoundingClientRect();
+          const x = ((e.clientX - r.left) / r.width) * 100;
+          const y = ((e.clientY - r.top) / r.height) * 100;
+          card.style.setProperty("--mx", x + "%");
+          card.style.setProperty("--my", y + "%");
+        });
+      });
+
+      // Command palette (⌘K / Ctrl+K)
+      const paletteBtn = document.getElementById("paletteBtn");
+      const dlg = document.getElementById("palette");
+      const input = document.getElementById("palInput");
+      const list = document.getElementById("palList");
+
+      const items = [
+        { label: "Work", href: "#work", type: "Page" },
+        { label: "About", href: "#about", type: "Page" },
+        { label: "Contact", href: "#contact", type: "Page" },
+        ...cards.map(c => ({
+          label: c.querySelector(".title")?.textContent?.trim() || "Work item",
+          href: c.getAttribute("href") || "#work",
+          type: c.dataset.type || "Work"
+        }))
+      ];
+
+      function render(q="") {
+        const query = q.trim().toLowerCase();
+        const filtered = items.filter(i => i.label.toLowerCase().includes(query) || i.type.toLowerCase().includes(query));
+        list.innerHTML = filtered.slice(0, 12).map(i =>
+          `<div class="palItem" data-href="${i.href}">
+            <div><strong>${i.label}</strong><div style="font-size:12px; opacity:.8">${i.type}</div></div>
+            <div class="kbd">↵</div>
+          </div>`
+        ).join("");
+        [...list.querySelectorAll(".palItem")].forEach(el => el.addEventListener("click", () => {
+          dlg.close();
+          location.href = el.dataset.href;
+        }));
+      }
+
+      function openPalette() {
+        render("");
+        dlg.showModal();
+        setTimeout(() => input.focus(), 0);
+      }
+
+      paletteBtn.addEventListener("click", openPalette);
+
+      window.addEventListener("keydown", (e) => {
+        const isK = e.key.toLowerCase() === "k";
+        if ((e.metaKey || e.ctrlKey) && isK) { e.preventDefault(); openPalette(); }
+        if (e.key === "Escape" && dlg.open) dlg.close();
+      });
+
+      input.addEventListener("input", () => render(input.value));
+      dlg.addEventListener("click", (e) => { if (e.target === dlg) dlg.close(); });
+      dlg.addEventListener("close", () => { input.value = ""; });
+      input.addEventListener("keydown", (e) => {
+        if (e.key === "Enter") {
+          const first = list.querySelector(".palItem");
+          if (first?.dataset?.href) { dlg.close(); location.href = first.dataset.href; }
+        }
+      });
+    </script>
+  </body>
+</html>

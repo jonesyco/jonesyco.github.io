@@ -1,0 +1,171 @@
+---
+import BaseLayout from "../../layouts/BaseLayout.astro";
+import { getImage } from "astro:assets";
+import { photos } from "../../lib/photos";
+import captions from "../../data/photography.captions.json";
+
+const thumbs = await Promise.all(
+  photos.map(async (p) => {
+    const thumb = await getImage({
+      src: p.image,
+      width: 320,        // masonry looks nicer with slightly larger thumbs
+      format: "webp",
+      quality: 75,
+    });
+
+    return { ...p, thumb };
+  })
+);
+
+const allTags = Array.from(
+  new Set(photos.flatMap(p => p.tags))
+).sort();
+---
+
+<BaseLayout title="Photography · jonesyco">
+  <div class="wrap">
+    <header class="sectionHead" style="margin-top: 8px;">
+      <h1 style="margin:0; font-size:28px; letter-spacing:.01em;">Photography</h1>
+      <a class="pill" href="/">← Home</a>
+    </header>
+
+    <p style="margin:10px 0 18px; color:var(--muted); max-width: 70ch; line-height:1.6;">
+      
+    </p>
+
+    <div class="tagFilters">
+  <button class="tagChip active" data-tag="all">All</button>
+
+  {allTags.map(tag => (
+    <button class="tagChip" data-tag={tag}>
+      #{tag}
+    </button>
+  ))}
+</div>
+
+    <section class="masonry" aria-label="Photo gallery">
+      {thumbs.map((p) => (
+  <a
+  class="masonryItem"
+  href={`/photography/${p.slug}`}
+  data-tags={p.tags.join(" ")}
+>
+    <img
+      src={p.thumb.src}
+      width={p.thumb.attributes.width}
+      height={p.thumb.attributes.height}
+      alt={p.slug}
+      loading="lazy"
+      decoding="async"
+    />
+
+    <div class="cap">
+      <div class="capTitle">
+        {captions[p.slug]?.title ?? p.slug}
+      </div>
+
+      {captions[p.slug]?.caption && (
+        <div class="capText">
+          {captions[p.slug].caption}
+        </div>
+      )}
+    </div>
+  </a>
+))}
+    </section>
+  </div>
+
+  <script>
+  const chips = document.querySelectorAll(".tagChip");
+  const items = document.querySelectorAll(".masonryItem");
+
+  chips.forEach(chip => {
+    chip.addEventListener("click", () => {
+      chips.forEach(c => c.classList.remove("active"));
+      chip.classList.add("active");
+
+      const tag = chip.dataset.tag;
+
+      items.forEach(item => {
+        if (tag === "all") {
+          item.style.display = "";
+          return;
+        }
+
+        const tags = item.dataset.tags.split(" ");
+        item.style.display = tags.includes(tag) ? "" : "none";
+      });
+    });
+  });
+</script>
+
+  <style>
+    /* Masonry using CSS columns (simple, fast, static-friendly) */
+    .masonry {
+      column-count: 4;
+      column-gap: 14px;
+    }
+   @media (max-width: 1100px) {
+  .masonry { column-count: 3; }
+}
+
+@media (max-width: 800px) {
+  .masonry { column-count: 2; }
+}
+
+@media (max-width: 500px) {
+  .masonry { column-count: 1; }
+}
+
+    .masonryItem {
+      display: inline-block;
+      width: 100%;
+      margin: 0 0 14px;
+      break-inside: avoid;
+      border-radius: 18px;
+      overflow: hidden;
+      border: 1px solid var(--stroke);
+      background: linear-gradient(180deg, var(--card), rgba(255,255,255,.02));
+      box-shadow: var(--shadow);
+      transform: translateZ(0);
+      transition: transform .2s ease, border-color .2s ease;
+    }
+    .masonryItem:hover {
+      transform: translateY(-2px);
+      border-color: rgba(121,167,255,.32);
+    }
+
+    .masonryItem img {
+      width: 100%;
+      height: auto;
+      display: block;
+      transition: transform .35s ease;
+    }
+    .masonryItem:hover img {
+      transform: scale(1.03);
+    }
+
+    .cap{
+  padding: 10px 12px 12px;
+  border-top: 1px solid var(--stroke);
+}
+.capTitle{
+  font-size: 13px;
+  color: var(--text);
+  opacity: .9;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.capText{
+  margin-top: 4px;
+  font-size: 12px;
+  color: var(--muted);
+  line-height: 1.4;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+  </style>
+</BaseLayout>

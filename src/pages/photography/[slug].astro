@@ -1,0 +1,144 @@
+---
+import BaseLayout from "../../layouts/BaseLayout.astro";
+import { getImage } from "astro:assets";
+import { photos } from "../../lib/photos";
+import captions from "../../data/photography.captions.json";
+
+
+export async function getStaticPaths() {
+  return photos.map((p) => ({
+    params: { slug: p.slug },
+  }));
+}
+
+const { slug } = Astro.params;
+const meta = captions[slug];
+const idx = photos.findIndex((p) => p.slug === slug);
+if (idx < 0) throw new Error(`Photo not found: ${slug}`);
+
+const photo = photos[idx];
+const prev = idx > 0 ? photos[idx - 1] : null;
+const next = idx < photos.length - 1 ? photos[idx + 1] : null;
+
+// Generate a display-optimized “full” image at build time.
+// You can bump width to 3200 if you want.
+const full = await getImage({
+  src: photo.image,
+  width: 2600,
+  format: "webp",
+  quality: 90,
+});
+---
+
+<BaseLayout title={`${photo.slug} · Photography · jonesyco`}>
+  <div class="wrap">
+    <header class="photoTop">
+      <a class="pill" href="/photography">← Photography</a>
+      <div class="photoNav">
+        {prev ? <a class="pill" href={`/photography/${prev.slug}`} rel="prev">← Prev</a> : <span class="pill disabled">← Prev</span>}
+        {next ? <a class="pill" href={`/photography/${next.slug}`} rel="next">Next →</a> : <span class="pill disabled">Next →</span>}
+      </div>
+    </header>
+
+    <div class="photoFrame card">
+      <img
+        src={full.src}
+        width={full.attributes.width}
+        height={full.attributes.height}
+        alt={photo.slug}
+        loading="eager"
+        decoding="async"
+      />
+    </div>
+
+   <section class="photoInfo card">
+  <h1 class="photoTitle">{meta?.title ?? photo.slug}</h1>
+
+  {meta?.caption && <p class="photoCaption">{meta.caption}</p>}
+
+  <p class="photoHint">
+    Use <strong>←</strong> / <strong>→</strong> keys to navigate. Press <strong>Esc</strong> to return to the gallery.
+  </p>
+
+  {(meta?.location || meta?.date) && (
+    <div class="photoMeta">
+      {meta?.location && <span class="badge">📍 {meta.location}</span>}
+      {meta?.date && <span class="badge">🗓 {meta.date}</span>}
+    </div>
+  )}
+</section>
+  </div>
+
+  <script>
+    // Keyboard navigation: Left/Right, Esc back
+    (function () {
+      const prev = document.querySelector('a[rel="prev"]')?.getAttribute("href");
+      const next = document.querySelector('a[rel="next"]')?.getAttribute("href");
+
+      window.addEventListener("keydown", (e) => {
+        if (e.key === "ArrowLeft" && prev) location.href = prev;
+        if (e.key === "ArrowRight" && next) location.href = next;
+        if (e.key === "Escape") location.href = "/photography";
+      });
+    })();
+  </script>
+
+  <style>
+    .photoTop{
+      display:flex;
+      justify-content:space-between;
+      align-items:center;
+      gap:12px;
+      margin: 8px 0 14px;
+      flex-wrap: wrap;
+    }
+    .photoNav{
+      display:flex;
+      gap:10px;
+      align-items:center;
+      flex-wrap: wrap;
+    }
+    .pill.disabled{
+      opacity:.45;
+      pointer-events:none;
+    }
+
+    .photoFrame{
+      overflow:hidden;
+      border-radius: 22px;
+    }
+    .photoFrame img{
+      width:100%;
+      height:auto;
+      display:block;
+    }
+
+    .photoInfo{
+      margin-top: 14px;
+      padding: 16px;
+      border-radius: 22px;
+    }
+    .photoTitle{
+      margin:0 0 8px;
+      font-size: 22px;
+      letter-spacing:.01em;
+    }
+    .photoHint{
+      margin:0;
+      color: var(--muted);
+      line-height: 1.6;
+    }
+    .photoCaption{
+  margin: 0 0 10px;
+  color: var(--muted);
+  line-height: 1.65;
+  max-width: 70ch;
+}
+.photoMeta{
+  display:flex;
+  gap:10px;
+  flex-wrap:wrap;
+  margin-top: 10px;
+}
+  </style>
+</BaseLayout>

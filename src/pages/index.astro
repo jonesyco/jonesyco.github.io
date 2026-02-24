@@ -1,9 +1,10 @@
 ---
 import BaseLayout from "../layouts/BaseLayout.astro";
+import { Code } from 'astro:components';
 const work = [
   { type: "Code", title: "Dashboard Redesign", desc: "UI overhaul & metrics boost.", tag: "React · .NET", href: "#", year: "2026" },
-  { type: "Photo", title: "Sunset Peaks", desc: "Series: High Desert", tag: "Landscape", href: "#", year: "2025" },
-  { type: "Writing", title: "Performance Notes", desc: "Shipping fast without shipping bugs.", tag: "Web perf", href: "#", year: "2026" },
+  { type: "Photography", title: "Sunset Peaks", desc: "Series: High Desert", tag: "Landscape", href: "#", year: "2025" },
+  { type: "Painting", title: "Performance Notes", desc: "Shipping fast without shipping bugs.", tag: "Web perf", href: "#", year: "2026" },
   { type: "Experiment", title: "Retro Synthwave", desc: "3D + shaders + nostalgia.", tag: "WebGL", href: "#", year: "2025" },
   { type: "Code", title: "Data Viz Tool", desc: "Interactive analytics platform.", tag: "D3 · API", href: "#", year: "2025" },
   { type: "Photo", title: "Night Sky", desc: "Clean astrophotography set.", tag: "Astro", href: "#", year: "2026" }
@@ -17,6 +18,7 @@ const work = [
         <div class="brand">jonesyco</div>
         <div class="links">
           <a class="pill" href="#work">Work</a>
+          <a class="pill" href="/photography">Photography</a>
           <a class="pill" href="#about">About</a>
           <a class="pill" href="#contact">Contact</a>
           <button class="btn" id="paletteBtn" type="button" title="Command Palette">
@@ -40,10 +42,10 @@ const work = [
             </div>
 
             <div class="badges">
-              <span class="badge">⚡ Full-Stack</span>
-              <span class="badge">🧩 UI Engineering</span>
+              <span class="badge">🧩 Software Engineering</span>
               <span class="badge">📷 Photography</span>
-              <span class="badge">🛰️ Experiments</span>
+              <span class="badge">🛰️ Painting</span>
+              <span class="badge">⚡ Projects</span>
             </div>
           </div>
 
@@ -55,13 +57,16 @@ const work = [
                 </div>
                 <div>problmatik vibes, jonesyco domain</div>
               </div>
-            <pre><span class="kw">function</span> <span class="fn">createPortfolio</span>() {'{'}
-  <span class="kw">return</span> {'{'}
-    design: <span class="str">"retro + sleek-studio"</span>,
-    theme: <span class="str">"dark & light"</span>,
-    magic: <span class="str">"fancy JS features"</span>,
-  {'}'};
-{'}'}</pre>
+            <Code code={`private static bool TryReplaceGuidPrefixAllowBraces(string input, string prefix8, out string output)
+	{
+		output = input;
+		if (string.IsNullOrWhiteSpace(input)) return false;
+
+		var s = input.Trim();
+
+		bool hasBraces = s.Length == 38 && s[0] == '{' && s[37] == '}';
+		if (hasBraces)
+			s = s.Substring(1, 36);`} lang="cs" />
             </div>
           </div>
         </section>

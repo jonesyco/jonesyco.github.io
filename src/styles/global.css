@@ -576,3 +576,30 @@ html[data-theme="light"] .palInput {
             transition: none;
         }
 }
+
+.tagFilters {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+    margin-bottom: 18px;
+}
+
+.tagChip {
+    padding: 8px 12px;
+    border-radius: 999px;
+    border: 1px solid var(--stroke);
+    background: var(--card);
+    color: var(--muted);
+    cursor: pointer;
+    transition: .2s ease;
+}
+
+    .tagChip:hover {
+        transform: translateY(-1px);
+    }
+
+    .tagChip.active {
+        color: var(--text);
+        border-color: rgba(124,255,178,.35);
+        background: rgba(124,255,178,.08);
+    }

@@ -1,0 +1,51 @@
+{
+  "american-eagles": {
+    "title": "American Eagles",
+    "caption": "prepping for launch",
+    "location": "SLC International Airport - Salt Lake City, Utah",
+    "date": "2026-02-13",
+    "tags":  ["adventure", "airport"]
+  },
+  "friendly-neighbor": {
+    "title": "Crossing Guard - FH3",
+    "caption": "just looking out",
+    "location": "SE 33rd Pl & SE Francis St - Portland, Oregon",
+    "date": "2026-02-13",
+    "tags": ["art", "portland"]
+  },
+  "mad-dog": {
+    "title": "Mad Dog - FH2",
+    "caption": "veks evict",
+    "location": "SW Harvey Milk St & SW 11th Ave - Portland, Oregon",
+    "date": "2026-02-13",
+    "tags": [ "art", "portland" ]
+  },
+  "mushrooms": {
+    "title": "Tiny Village",
+    "caption": "tiny mushrooms in forest park",
+    "location": "Forest Park - Portland, Oregon",
+    "date": "2025-10-27",
+    "tags": [ "nature", "forest", "portland" ]
+  },
+  "mandala-tabletop": {
+    "title": "Mandala Tabletop Project",
+    "caption": "experimenting with watercolors",
+    "location": "Home - Portland, Oregon",
+    "date": "2023-04-23",
+    "tags": [ "painting", "projects", "home" ]
+  },
+  "oregon-city-bluff": {
+    "title": "Blurry Oregon City",
+    "caption": "focal point experiment",
+    "location": "Bluffs - Oregon City, Oregon",
+    "date": "2025-11-23",
+    "tags": [ "art", "oregon-city" ]
+  },
+  "portland-spirit": {
+    "title": "Portland Spirit Mooring",
+    "caption": "❤️ Sony Alpha 6400",
+    "location": "Waterfront Park - Portland, Oregon",
+    "date": "2025-11-23",
+    "tags": [ "downtown", "night" ]
+  }
+}

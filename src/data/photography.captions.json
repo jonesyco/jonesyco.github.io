@@ -7,7 +7,8 @@
     "tags": [
       "adventure",
       "airport"
-    ]
+    ],
+    "featured": true
   },
   "friendly-neighbor": {
     "title": "Crossing Guard - FH3",
@@ -17,7 +18,8 @@
     "tags": [
       "still-life",
       "portland"
-    ]
+    ],
+    "featured": false
   },
   "mad-dog": {
     "title": "Mad Dog - FH2",
@@ -27,7 +29,8 @@
     "tags": [
       "still-life",
       "portland"
-    ]
+    ],
+    "featured": false
   },
   "metolius-source": {
     "title": "Metolius River",
@@ -38,7 +41,8 @@
       "nature",
       "forest",
       "adventure"
-    ]
+    ],
+    "featured": false
   },
   "mushrooms": {
     "caption": "tiny mushrooms in forest park",
@@ -49,7 +53,8 @@
       "forest",
       "portland"
     ],
-    "title": "Tiny Village"
+    "title": "Tiny Village",
+    "featured": true
   },
   "mandala-tabletop": {
     "title": "Mandala Tabletop Project",
@@ -59,7 +64,8 @@
     "tags": [
       "projects",
       "home"
-    ]
+    ],
+    "featured": true
   },
   "oregon-city-bluff": {
     "title": "Blurry Oregon City",
@@ -69,7 +75,8 @@
     "tags": [
       "art",
       "oregon-city"
-    ]
+    ],
+    "featured": true
   },
   "oregon-city-stairs": {
     "title": "On The Stairs",
@@ -78,7 +85,8 @@
     "date": "2025-11-23",
     "tags": [
       "oregon-city"
-    ]
+    ],
+    "featured": true
   },
   "portland-spirit": {
     "title": "Portland Spirit Mooring",
@@ -88,7 +96,8 @@
     "tags": [
       "downtown",
       "night"
-    ]
+    ],
+    "featured": false
   },
   "roommates": {
     "title": "Roommates",
@@ -98,7 +107,8 @@
     "tags": [
       "naps",
       "selfie"
-    ]
+    ],
+    "featured": false
   },
   "pointy": {
     "title": "Trusty Pencil Sharpener",
@@ -107,7 +117,8 @@
     "date": "2025-12-08",
     "tags": [
       "home"
-    ]
+    ],
+    "featured": true
   },
   "powell-butte-tree": {
     "title": "Tree on Powell Butte",
@@ -117,7 +128,8 @@
     "tags": [
       "nature",
       "portland"
-    ]
+    ],
+    "featured": true
   },
   "moon-waves": {
     "title": "Moon Waves",
@@ -127,7 +139,8 @@
     "tags": [
       "moon",
       "nature"
-    ]
+    ],
+    "featured": false
   },
   "smurf-drama": {
     "title": "Smurf Drama",
@@ -136,6 +149,7 @@
     "date": "2024-08-26",
     "tags": [
       "still-life"
-    ]
+    ],
+    "featured": false
   }
 }

@@ -4,27 +4,36 @@
     "caption": "pencil & watercolor on wood",
     "location": "Home - Portland, Oregon",
     "date": "2023-10-31",
-    "tags":  ["pencil", "watercolor", "wood"]
+    "tags": [
+      "pencil",
+      "watercolor",
+      "wood"
+    ],
+    "featured": true
   },
   "leagues": {
     "title": "Quiet Kingdom Below",
     "caption": "pencil & watercolor on wood",
     "location": "Home - Portland, Oregon",
     "date": "2024-10-31",
-    "tags":  ["pencil", "watercolor", "wood"]
+    "tags": [
+      "pencil",
+      "watercolor",
+      "wood"
+    ],
+    "featured": true
   },
   "wax-lion": {
     "title": "His Majesty",
     "caption": "pencil & wax on wood under resin",
     "location": "Home - Portland, Oregon",
     "date": "2022-08-12",
-    "tags": [ "pencil", "watercolor", "wood", "resin" ]
-  },
-  "mushrooms": {
-    "title": "Title",
-    "caption": "materials",
-    "location": "Home - Portland, Oregon",
-    "date": "date",
-    "tags": [ "tags" ]
+    "tags": [
+      "pencil",
+      "watercolor",
+      "wood",
+      "resin"
+    ],
+    "featured": true
   }
 }

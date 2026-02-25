@@ -1,64 +1,91 @@
 ---
 import BaseLayout from "../layouts/BaseLayout.astro";
 import { Code } from 'astro:components';
-const work = [
-  { type: "Code", title: "Dashboard Redesign", desc: "UI overhaul & metrics boost.", tag: "React · .NET", href: "#", year: "2026" },
-  { type: "Photography", title: "Sunset Peaks", desc: "Series: High Desert", tag: "Landscape", href: "#", year: "2025" },
-  { type: "Painting", title: "Performance Notes", desc: "Shipping fast without shipping bugs.", tag: "Web perf", href: "#", year: "2026" },
-  { type: "Experiment", title: "Retro Synthwave", desc: "3D + shaders + nostalgia.", tag: "WebGL", href: "#", year: "2025" },
-  { type: "Code", title: "Data Viz Tool", desc: "Interactive analytics platform.", tag: "D3 · API", href: "#", year: "2025" },
-  { type: "Photo", title: "Night Sky", desc: "Clean astrophotography set.", tag: "Astro", href: "#", year: "2026" }
-];
+import { getImage } from "astro:assets";
+import { featuredWork } from "../lib/featured";
 
+function pickRandomDistinct(arr, count) {
+  // Fisher–Yates shuffle copy
+  const a = arr.slice();
+  for (let i = a.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [a[i], a[j]] = [a[j], a[i]];
+  }
+  return a.slice(0, Math.min(count, a.length));
+}
+
+const candidates = featuredWork.filter((w) => w.featured === true);
+const chosen = pickRandomDistinct(candidates, 3);
+
+// Build-time thumbs for homepage row
+const featuredRow = await Promise.all(
+  chosen.map(async (w) => {
+    const thumb = await getImage({
+      src: w.image,
+      width: 520,
+      format: "webp",
+      quality: 78,
+    });
+    return { ...w, thumb };
+  })
+);
+console.log("work totals", {
+  total: featuredWork.length,
+  photos: featuredWork.filter(w => w.kind === "photo").length,
+  paintings: featuredWork.filter(w => w.kind === "painting").length,
+  featuredPhotos: featuredWork.filter(w => w.kind === "photo" && w.featured).length,
+  featuredPaintings: featuredWork.filter(w => w.kind === "painting" && w.featured).length,
+});
+console.log("Featured candidates:", candidates.map(c => c.title));
 ---
 
 <BaseLayout title="jonesyco">
-    <div class="wrap">
-      <header class="nav">
-        <div class="brand">jonesyco</div>
-        <div class="links">
-          <a class="pill" href="#work">Work</a>
-          <a class="pill" href="/photography">Photography</a>
-          <a class="pill" href="/paintings">Paintings</a>
-          <a class="pill" href="#about">About</a>
-          <a class="pill" href="#contact">Contact</a>
-          <button class="btn" id="paletteBtn" type="button" title="Command Palette">
-            ⌘K <span class="kbd">Ctrl/⌘ K</span>
-          </button>
-          <button class="btn" id="themeBtn" type="button" title="Toggle theme">🌙</button>
-        </div>
-      </header>
+	<div class="wrap">
+	  <header class="nav">
+		<div class="brand">jonesyco</div>
+		<div class="links">
+		  <a class="pill" href="#work">Work</a>
+		  <a class="pill" href="/photography">Photography</a>
+		  <a class="pill" href="/paintings">Paintings</a>
+		  <a class="pill" href="#about">About</a>
+		  <a class="pill" href="#contact">Contact</a>
+		  <button class="btn" id="paletteBtn" type="button" title="Command Palette">
+			⌘K <span class="kbd">Ctrl/⌘ K</span>
+		  </button>
+		  <button class="btn" id="themeBtn" type="button" title="Toggle theme">🌙</button>
+		</div>
+	  </header>
 
-      <main>
-        <section class="hero">
-          <div class="card heroLeft">
-            <h1 class="h1">Code, Photos & Creative Experiments.</h1>
-            <p class="sub">
-              A retro-sleek studio portfolio for shipping software, capturing moments, and building weird (useful) things.
-            </p>
+	  <main>
+		<section class="hero">
+		  <div class="card heroLeft">
+			<h1 class="h1">Code, Photos & Creative Experiments.</h1>
+			<p class="sub">
+			  A retro-sleek studio portfolio for shipping software, capturing moments, and building weird (useful) things.
+			</p>
 
-            <div class="actions">
-              <a class="btn primary" href="#work">View Work →</a>
-              <a class="btn" href="#contact">Contact</a>
-            </div>
+			<div class="actions">
+			  <a class="btn primary" href="#work">View Work →</a>
+			  <a class="btn" href="#contact">Contact</a>
+			</div>
 
-            <div class="badges">
-              <span class="badge">🧩 Software Engineering</span>
-              <span class="badge">📷 Photography</span>
-              <span class="badge">🛰️ Painting</span>
-              <span class="badge">⚡ Projects</span>
-            </div>
-          </div>
+			<!--<div class="badges">
+			  <span class="badge">🧩 Software Engineering</span>
+			  <span class="badge">📷 Photography</span>
+			  <span class="badge">🛰️ Painting</span>
+			  <span class="badge">⚡ Projects</span>
+			</div>-->
+		  </div>
 
-          <div class="card heroRight">
-            <div class="terminal" aria-label="Interactive code hero">
-              <div class="termTop">
-                <div class="dots">
-                  <span class="dot"></span><span class="dot"></span><span class="dot"></span>
-                </div>
-                <div>problmatik vibes, jonesyco domain</div>
-              </div>
-            <Code code={`private static bool TryReplaceGuidPrefixAllowBraces(string input, string prefix8, out string output)
+		  <div class="card heroRight">
+			<div class="terminal" aria-label="Interactive code hero">
+			  <div class="termTop">
+				<div class="dots">
+				  <span class="dot"></span><span class="dot"></span><span class="dot"></span>
+				</div>
+				<div></div>
+			  </div>
+			<Code code={`private static bool TryReplaceGuidPrefixAllowBraces(string input, string prefix8, out string output)
 	{
 		output = input;
 		if (string.IsNullOrWhiteSpace(input)) return false;
@@ -68,268 +95,270 @@ const work = [
 		bool hasBraces = s.Length == 38 && s[0] == '{' && s[37] == '}';
 		if (hasBraces)
 			s = s.Substring(1, 36);`} lang="cs" />
-            </div>
-          </div>
-        </section>
+			</div>
+		  </div>
+		</section>
 
-        <section id="work" class="section">
-          <div class="sectionHead">
-            <h2 style="margin:0; font-size:22px; letter-spacing:.01em;">Featured Work</h2>
-            <div class="filters" id="filters">
-              <button class="chip" data-filter="All" aria-pressed="true">All</button>
-              <button class="chip" data-filter="Code" aria-pressed="false">Code</button>
-              <button class="chip" data-filter="Photo" aria-pressed="false">Photo</button>
-              <button class="chip" data-filter="Writing" aria-pressed="false">Writing</button>
-              <button class="chip" data-filter="Experiment" aria-pressed="false">Experiments</button>
-            </div>
-          </div>
+		<section id="work" class="section">
+  <div class="sectionHead">
+    <h2 style="margin:0;">Featured</h2>
+    <div style="display:flex; gap:10px; flex-wrap:wrap;">
+      <a class="badge" href="/photography">📷 Photography</a>
+      <a class="badge" href="/paintings">🛰️ Painting</a>
+    </div>
+  </div>
 
-          <div class="grid" id="grid">
-            {work.map((w) => (
-              <a class="card workCard" href={w.href} data-type={w.type}>
-                <div class="shine"></div>
-                <span class="label">{w.type}</span>
-                <div class="title">{w.title}</div>
-                <p class="desc">{w.desc}</p>
-                <div class="meta">
-                  <span>{w.tag}</span>
-                  <span>•</span>
-                  <span>{w.year}</span>
-                </div>
-              </a>
-            ))}
-          </div>
-        </section>
+  <div class="featuredRow">
+    {featuredRow.map((w) => (
+      <a class="featuredCard" href={w.href}>
+        <img
+          src={w.thumb.src}
+          width={w.thumb.attributes.width}
+          height={w.thumb.attributes.height}
+          alt={w.title}
+          loading="lazy"
+          decoding="async"
+        />
+        <div class="featuredMeta">
+          <div class="featuredTitle">{w.title}</div>
+          {w.caption && <div class="featuredDesc">{w.caption}</div>}
+          <div class="featuredKind">{w.kind === "photo" ? "Photography" : "Painting"}</div>
+        </div>
+      </a>
+    ))}
+  </div>
+</section>
 
-    <section id="about" class="section">
+	<section id="about" class="section">
   <div class="card aboutCard">
 
    <div class="aboutImageFx" id="aboutImageFx">
   <img
-    src="/images/roommates.jpg"
-    alt="Profile photo"
-    class="aboutImage"
-    loading="lazy"
+	src="/images/roommates.jpg"
+	alt="Profile photo"
+	class="aboutImage"
+	loading="lazy"
   />
 </div>
 
-    <h2 class="aboutTitle">About Me</h2>
+	<h2 class="aboutTitle">About Me</h2>
 
-    <p class="aboutText">
-     I’m a person who solves problems through creativity and innovation and have a genuine fascination with how complex systems fit together. 
-     Whether writing code or shaping a composition, I’m driven to explore, understand, and to give ideas form through craft, creativity, and intention.
-     </p>
-     <p class="aboutText">
-     Professionally, I’m a Senior Software Engineer working in telecom, building fast, reliable, and scalable systems using event streaming, 
-     in‑memory data stores, cloud platforms, and the databases that anchor them. I care about thoughtful architecture, clean design, and solutions that 
-     respect the people who rely on them.
+	<p class="aboutText">
+	<strong>I’m driven by curiosity</strong> — especially about how complex systems come together and why they work. 
+	Whether writing software or shaping a creative composition, I’m motivated by the process of exploring ideas, 
+	understanding their structure, and bringing them into form through craft and intention.
+	</p>
+	<p class="aboutText">
+	Professionally, I’m a Senior Software Engineer in the telecommunications space, building fast, reliable, 
+	and scalable systems powered by event streaming, in-memory data platforms, cloud infrastructure, and the 
+	databases that support them. I value thoughtful architecture, clean design, and solutions that respect the people who depend on them.
+	</p>
+	<p class="aboutText">
+Outside of engineering, I’m drawn to storytelling, the beauty of nature, and the quiet adventure found off the well-traveled path. 
+Creativity connects my work in software, photography, and art — a way of observing the world and shaping something meaningful from what I find.
 </p>
 <p class="aboutText">
-Beyond the technical world, I value the stories that shape us, the beauty of nature, and the kind of adventure 
-that comes from taking the less‑trodden path. Creativity is a thread that runs through my engineering, my photography, 
-and my art — a way of seeing the world and making something meaningful from it. 
-
-I live in beautiful Portland, Oregon with my cat, Naps, and can often be found paddling around the nearby rivers.
-
-    </p>
+I live in Portland, Oregon with my cat, Naps, and often spend my free time paddling the rivers nearby.
+</p>
+	
 
   </div>
 </section>
 
-        <section id="contact" class="section">
-          <div class="card" style="padding:18px;">
-            <h2 style="margin:0 0 8px; font-size:22px;">Contact</h2>
-          
-            <div style="display:flex; gap:10px; flex-wrap:wrap;">
-             <a class="btn" id="copyEmail" type="button">✉️ Copy Email</a>
-              <a class="btn" href="#">🐱 GitHub</a>
-              <a class="btn" href="#">💼 LinkedIn</a>
-              <a class="btn" href="#">📸 Instagram</a>
-            </div>
-          </div>
-        </section>
+		<section id="contact" class="section">
+		  <div class="card" style="padding:18px;">
+			<h2 style="margin:0 0 8px; font-size:22px;">Contact</h2>
+		  
+			<div style="display:flex; gap:10px; flex-wrap:wrap;">
+			 <a class="btn" id="copyEmail" type="button">✉️ Copy Email</a>
+			  <a class="btn" href="#">🐱 GitHub</a>
+			  <a class="btn" href="#">💼 LinkedIn</a>
+			  <a class="btn" href="#">📸 Instagram</a>
+			</div>
+		  </div>
+		</section>
 
-        <footer class="footer">
-          <span>© {new Date().getFullYear()} jonesyco</span>
-          <span>Tip: press <span class="kbd">Ctrl</span>+<span class="kbd">K</span> for palette</span>
-        </footer>
-      </main>
-    </div>
+		<footer class="footer">
+		  <span>© {new Date().getFullYear()} jonesyco</span>
+		  <span>Tip: press <span class="kbd">Ctrl</span>+<span class="kbd">K</span> for palette</span>
+		</footer>
+	  </main>
+	</div>
 
-    <dialog id="palette">
-      <div class="palHead">
-        <input id="palInput" class="palInput" placeholder="Search: work, tags, pages…" autocomplete="off" />
-      </div>
-      <div id="palList" class="palList"></div>
-    </dialog>
+	<dialog id="palette">
+	  <div class="palHead">
+		<input id="palInput" class="palInput" placeholder="Search: work, tags, pages…" autocomplete="off" />
+	  </div>
+	  <div id="palList" class="palList"></div>
+	</dialog>
 
-    </BaseLayout>
+	</BaseLayout>
 
-    <script>
-      // Theme toggle (persisted)
-      const themeBtn = document.getElementById("themeBtn");
-      const html = document.documentElement;
+	<script>
+	  // Theme toggle (persisted)
+	  const themeBtn = document.getElementById("themeBtn");
+	  const html = document.documentElement;
 
-      const savedTheme = localStorage.getItem("theme");
-      if (savedTheme === "light" || savedTheme === "dark") {
-        html.dataset.theme = savedTheme;
-      }
-      themeBtn.textContent = html.dataset.theme === "dark" ? "🌙" : "☀️";
+	  const savedTheme = localStorage.getItem("theme");
+	  if (savedTheme === "light" || savedTheme === "dark") {
+		html.dataset.theme = savedTheme;
+	  }
+	  themeBtn.textContent = html.dataset.theme === "dark" ? "🌙" : "☀️";
 
-      themeBtn.addEventListener("click", () => {
-        const next = html.dataset.theme === "dark" ? "light" : "dark";
-        html.dataset.theme = next;
-        localStorage.setItem("theme", next);
-        themeBtn.textContent = next === "dark" ? "🌙" : "☀️";
-      });
+	  themeBtn.addEventListener("click", () => {
+		const next = html.dataset.theme === "dark" ? "light" : "dark";
+		html.dataset.theme = next;
+		localStorage.setItem("theme", next);
+		themeBtn.textContent = next === "dark" ? "🌙" : "☀️";
+	  });
 
-      // Filter chips
-      const chips = [...document.querySelectorAll("#filters .chip")];
-      const cards = [...document.querySelectorAll("#grid .workCard")];
+	  // Filter chips
+	  const chips = [...document.querySelectorAll("#filters .chip")];
+	  const cards = [...document.querySelectorAll("#grid .workCard")];
 
-      chips.forEach((c) => c.addEventListener("click", () => {
-        chips.forEach(x => x.setAttribute("aria-pressed", "false"));
-        c.setAttribute("aria-pressed", "true");
-        const f = c.dataset.filter;
-        cards.forEach(card => {
-          const t = card.dataset.type;
-          card.style.display = (f === "All" || f === t) ? "" : "none";
-        });
-      }));
+	  chips.forEach((c) => c.addEventListener("click", () => {
+		chips.forEach(x => x.setAttribute("aria-pressed", "false"));
+		c.setAttribute("aria-pressed", "true");
+		const f = c.dataset.filter;
+		cards.forEach(card => {
+		  const t = card.dataset.type;
+		  card.style.display = (f === "All" || f === t) ? "" : "none";
+		});
+	  }));
 
-      // “Shine” follows mouse for that retro-studio glow
-      cards.forEach((card) => {
-        card.addEventListener("mousemove", (e) => {
-          const r = card.getBoundingClientRect();
-          const x = ((e.clientX - r.left) / r.width) * 100;
-          const y = ((e.clientY - r.top) / r.height) * 100;
-          card.style.setProperty("--mx", x + "%");
-          card.style.setProperty("--my", y + "%");
-        });
-      });
+	  // “Shine” follows mouse for that retro-studio glow
+	  cards.forEach((card) => {
+		card.addEventListener("mousemove", (e) => {
+		  const r = card.getBoundingClientRect();
+		  const x = ((e.clientX - r.left) / r.width) * 100;
+		  const y = ((e.clientY - r.top) / r.height) * 100;
+		  card.style.setProperty("--mx", x + "%");
+		  card.style.setProperty("--my", y + "%");
+		});
+	  });
 
-      // Command palette (⌘K / Ctrl+K)
-      const paletteBtn = document.getElementById("paletteBtn");
-      const dlg = document.getElementById("palette");
-      const input = document.getElementById("palInput");
-      const list = document.getElementById("palList");
+	  // Command palette (⌘K / Ctrl+K)
+	  const paletteBtn = document.getElementById("paletteBtn");
+	  const dlg = document.getElementById("palette");
+	  const input = document.getElementById("palInput");
+	  const list = document.getElementById("palList");
 
-      const items = [
-        { label: "Work", href: "#work", type: "Page" },
-        { label: "About", href: "#about", type: "Page" },
-        { label: "Contact", href: "#contact", type: "Page" },
-        ...cards.map(c => ({
-          label: c.querySelector(".title")?.textContent?.trim() || "Work item",
-          href: c.getAttribute("href") || "#work",
-          type: c.dataset.type || "Work"
-        }))
-      ];
+	  const items = [
+		{ label: "Work", href: "#work", type: "Page" },
+		{ label: "About", href: "#about", type: "Page" },
+		{ label: "Contact", href: "#contact", type: "Page" },
+		...cards.map(c => ({
+		  label: c.querySelector(".title")?.textContent?.trim() || "Work item",
+		  href: c.getAttribute("href") || "#work",
+		  type: c.dataset.type || "Work"
+		}))
+	  ];
 
-      function render(q="") {
-        const query = q.trim().toLowerCase();
-        const filtered = items.filter(i => i.label.toLowerCase().includes(query) || i.type.toLowerCase().includes(query));
-        list.innerHTML = filtered.slice(0, 12).map(i =>
-          `<div class="palItem" data-href="${i.href}">
-            <div><strong>${i.label}</strong><div style="font-size:12px; opacity:.8">${i.type}</div></div>
-            <div class="kbd">↵</div>
-          </div>`
-        ).join("");
-        [...list.querySelectorAll(".palItem")].forEach(el => el.addEventListener("click", () => {
-          dlg.close();
-          location.href = el.dataset.href;
-        }));
-      }
+	  function render(q="") {
+		const query = q.trim().toLowerCase();
+		const filtered = items.filter(i => i.label.toLowerCase().includes(query) || i.type.toLowerCase().includes(query));
+		list.innerHTML = filtered.slice(0, 12).map(i =>
+		  `<div class="palItem" data-href="${i.href}">
+			<div><strong>${i.label}</strong><div style="font-size:12px; opacity:.8">${i.type}</div></div>
+			<div class="kbd">↵</div>
+		  </div>`
+		).join("");
+		[...list.querySelectorAll(".palItem")].forEach(el => el.addEventListener("click", () => {
+		  dlg.close();
+		  location.href = el.dataset.href;
+		}));
+	  }
 
-      function openPalette() {
-        render("");
-        dlg.showModal();
-        setTimeout(() => input.focus(), 0);
-      }
+	  function openPalette() {
+		render("");
+		dlg.showModal();
+		setTimeout(() => input.focus(), 0);
+	  }
 
-      paletteBtn.addEventListener("click", openPalette);
+	  paletteBtn.addEventListener("click", openPalette);
 
-      window.addEventListener("keydown", (e) => {
-        const isK = e.key.toLowerCase() === "k";
-        if ((e.metaKey || e.ctrlKey) && isK) { e.preventDefault(); openPalette(); }
-        if (e.key === "Escape" && dlg.open) dlg.close();
-      });
+	  window.addEventListener("keydown", (e) => {
+		const isK = e.key.toLowerCase() === "k";
+		if ((e.metaKey || e.ctrlKey) && isK) { e.preventDefault(); openPalette(); }
+		if (e.key === "Escape" && dlg.open) dlg.close();
+	  });
 
-      input.addEventListener("input", () => render(input.value));
-      dlg.addEventListener("click", (e) => { if (e.target === dlg) dlg.close(); });
-      dlg.addEventListener("close", () => { input.value = ""; });
-      input.addEventListener("keydown", (e) => {
-        if (e.key === "Enter") {
-          const first = list.querySelector(".palItem");
-          if (first?.dataset?.href) { dlg.close(); location.href = first.dataset.href; }
-        }
-      });
+	  input.addEventListener("input", () => render(input.value));
+	  dlg.addEventListener("click", (e) => { if (e.target === dlg) dlg.close(); });
+	  dlg.addEventListener("close", () => { input.value = ""; });
+	  input.addEventListener("keydown", (e) => {
+		if (e.key === "Enter") {
+		  const first = list.querySelector(".palItem");
+		  if (first?.dataset?.href) { dlg.close(); location.href = first.dataset.href; }
+		}
+	  });
 
-      (() => {
-    const btn = document.getElementById("copyEmail");
-    const status = document.getElementById("emailStatus");
-    if (!btn) return;
+	  (() => {
+	const btn = document.getElementById("copyEmail");
+	const status = document.getElementById("emailStatus");
+	if (!btn) return;
 
-    // split + mildly obfuscate
-    const u = "jonathan";       
-    const d = "jonesyco.net"; 
-    const email = `${u}@${d}`;
+	// split + mildly obfuscate
+	const u = "jonathan";       
+	const d = "jonesyco.net"; 
+	const email = `${u}@${d}`;
 
-    btn.addEventListener("click", async () => {
-      try {
-        await navigator.clipboard.writeText(email);
-        btn.textContent = "Copied ✓";
-        setTimeout(() => (btn.textContent = "Copy Email"), 1800);
-      } catch {
-        // fallback: reveal it if clipboard blocked
-        status.textContent = email;
-      }
-    });
+	btn.addEventListener("click", async () => {
+	  try {
+		await navigator.clipboard.writeText(email);
+		btn.textContent = "Copied ✓";
+		setTimeout(() => (btn.textContent = "Copy Email"), 1800);
+	  } catch {
+		// fallback: reveal it if clipboard blocked
+		status.textContent = email;
+	  }
+	});
   })();
 
 
   // About image parallax + halo (subtle)
   (function () {
-    const fx = document.getElementById("aboutImageFx");
-    if (!fx) return;
+	const fx = document.getElementById("aboutImageFx");
+	if (!fx) return;
 
-    // Respect reduced motion
-    const reduce = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-    if (reduce) return;
+	// Respect reduced motion
+	const reduce = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+	if (reduce) return;
 
-    const clamp = (n, min, max) => Math.max(min, Math.min(max, n));
+	const clamp = (n, min, max) => Math.max(min, Math.min(max, n));
 
-    function onMove(e) {
-      const r = fx.getBoundingClientRect();
-      const x = (e.clientX - r.left) / r.width;   // 0..1
-      const y = (e.clientY - r.top) / r.height;   // 0..1
+	function onMove(e) {
+	  const r = fx.getBoundingClientRect();
+	  const x = (e.clientX - r.left) / r.width;   // 0..1
+	  const y = (e.clientY - r.top) / r.height;   // 0..1
 
-      // halo position
-      fx.style.setProperty("--hx", (x * 100).toFixed(1) + "%");
-      fx.style.setProperty("--hy", (y * 100).toFixed(1) + "%");
+	  // halo position
+	  fx.style.setProperty("--hx", (x * 100).toFixed(1) + "%");
+	  fx.style.setProperty("--hy", (y * 100).toFixed(1) + "%");
 
-      // 3D tilt (keep subtle)
-      const tiltY = clamp((x - 0.5) * 10, -6, 6); // deg
-      const tiltX = clamp((0.5 - y) * 10, -6, 6); // deg
+	  // 3D tilt (keep subtle)
+	  const tiltY = clamp((x - 0.5) * 10, -6, 6); // deg
+	  const tiltX = clamp((0.5 - y) * 10, -6, 6); // deg
 
-      fx.style.setProperty("--ry", tiltY.toFixed(2) + "deg");
-      fx.style.setProperty("--rx", tiltX.toFixed(2) + "deg");
-    }
+	  fx.style.setProperty("--ry", tiltY.toFixed(2) + "deg");
+	  fx.style.setProperty("--rx", tiltX.toFixed(2) + "deg");
+	}
 
-    function reset() {
-      fx.style.setProperty("--hx", "50%");
-      fx.style.setProperty("--hy", "50%");
-      fx.style.setProperty("--ry", "0deg");
-      fx.style.setProperty("--rx", "0deg");
-    }
+	function reset() {
+	  fx.style.setProperty("--hx", "50%");
+	  fx.style.setProperty("--hy", "50%");
+	  fx.style.setProperty("--ry", "0deg");
+	  fx.style.setProperty("--rx", "0deg");
+	}
 
-    fx.addEventListener("mousemove", onMove);
-    fx.addEventListener("mouseleave", reset);
+	fx.addEventListener("mousemove", onMove);
+	fx.addEventListener("mouseleave", reset);
 
-    // Touch/mobile: keep static
-    fx.addEventListener("touchstart", reset, { passive: true });
-    reset();
+	// Touch/mobile: keep static
+	fx.addEventListener("touchstart", reset, { passive: true });
+	reset();
   })();
 
-    </script>
+	</script>
   </body>
 </html>

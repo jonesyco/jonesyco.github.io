@@ -33,7 +33,7 @@ export const photos: PhotoItem[] = Object.entries(photoImports)
         const name = path.split("/").pop() ?? "photo";
         const slug = slugifyFilename(name);
 
-        const meta = captions[slug] ?? {};
+        const meta = (captions as any)[slug] ?? {};
 
         return {
             name,
@@ -41,7 +41,8 @@ export const photos: PhotoItem[] = Object.entries(photoImports)
             image: mod.default,
             title: meta.title ?? slug,
             caption: meta.caption ?? "",
-            tags: meta.tags ?? []
+            tags: meta.tags ?? [],
+            featured: meta.featured ?? false,   // ✅ this is the key
         };
     })
     .sort((a, b) => a.name.localeCompare(b.name));

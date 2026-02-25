@@ -5,7 +5,7 @@ type PaintingModule = {
     default: any; // Astro image metadata module
 };
 
-const paintingImports = import.meta.glob<PaintingModule>(
+const imports = import.meta.glob<PaintingModule>(
     "../assets/paintings/*.{jpg,jpeg,png,webp,avif,JPG,JPEG,PNG,WEBP,AVIF}",
     { eager: true }
 );
@@ -28,20 +28,22 @@ export type PaintingItem = {
     image: any;     // Astro image metadata for getImage()
 };
 
-export const paintings: PaintingItem[] = Object.entries(paintingImports)
+export const paintings: PaintingItem[] = Object.entries(imports)
     .map(([path, mod]) => {
         const name = path.split("/").pop() ?? "painting";
         const slug = slugifyFilename(name);
 
-        const meta = captions[slug] ?? {};
+        const meta = (captions as any)[slug] ?? {};
 
         return {
+            kind: "painting" as const,
             name,
             slug,
             image: mod.default,
             title: meta.title ?? slug,
             caption: meta.caption ?? "",
-            tags: meta.tags ?? []
+            tags: meta.tags ?? [],
+            featured: meta.featured ?? false,
         };
     })
     .sort((a, b) => a.name.localeCompare(b.name));

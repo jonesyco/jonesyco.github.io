@@ -19,6 +19,7 @@ const work = [
         <div class="links">
           <a class="pill" href="#work">Work</a>
           <a class="pill" href="/photography">Photography</a>
+          <a class="pill" href="/paintings">Paintings</a>
           <a class="pill" href="#about">About</a>
           <a class="pill" href="#contact">Contact</a>
           <button class="btn" id="paletteBtn" type="button" title="Command Palette">
@@ -105,7 +106,7 @@ const work = [
 
    <div class="aboutImageFx" id="aboutImageFx">
   <img
-    src="/images/profile.jpg"
+    src="/images/roommates.jpg"
     alt="Profile photo"
     class="aboutImage"
     loading="lazy"
@@ -115,26 +116,22 @@ const work = [
     <h2 class="aboutTitle">About Me</h2>
 
     <p class="aboutText">
-      I'm a software engineer focused on building practical systems,
-      thoughtful interfaces, and tools that solve real problems.
-      My work lives at the intersection of engineering and creativity —
-      from backend pipelines and observability tooling to photography
-      and experimental web experiences.
-    </p>
+     I’m a person who solves problems through creativity and innovation and have a genuine fascination with how complex systems fit together. 
+     Whether writing code or shaping a composition, I’m driven to explore, understand, and to give ideas form through craft, creativity, and intention.
+     </p>
+     <p class="aboutText">
+     Professionally, I’m a Senior Software Engineer working in telecom, building fast, reliable, and scalable systems using event streaming, 
+     in‑memory data stores, cloud platforms, and the databases that anchor them. I care about thoughtful architecture, clean design, and solutions that 
+     respect the people who rely on them.
+</p>
+<p class="aboutText">
+Beyond the technical world, I value the stories that shape us, the beauty of nature, and the kind of adventure 
+that comes from taking the less‑trodden path. Creativity is a thread that runs through my engineering, my photography, 
+and my art — a way of seeing the world and making something meaningful from it. 
 
-    <p class="aboutText">
-      I enjoy designing systems that are reliable, understandable,
-      and a little bit fun to use. This site is both a portfolio and
-      a playground — a place to ship ideas, document experiments,
-      and explore new technologies.
-    </p>
+I live in beautiful Portland, Oregon with my cat, Naps, and can often be found paddling around the nearby rivers.
 
-    <div class="aboutMeta">
-      <span class="badge">⚙️ .NET / APIs</span>
-      <span class="badge">🎨 UI Engineering</span>
-      <span class="badge">📷 Photography</span>
-      <span class="badge">🚀 Systems Thinking</span>
-    </div>
+    </p>
 
   </div>
 </section>
@@ -142,11 +139,12 @@ const work = [
         <section id="contact" class="section">
           <div class="card" style="padding:18px;">
             <h2 style="margin:0 0 8px; font-size:22px;">Contact</h2>
-            <p style="margin:0 0 12px; color:var(--muted);">Drop a note: <strong>you@example.com</strong> (replace this)</p>
+          
             <div style="display:flex; gap:10px; flex-wrap:wrap;">
-              <a class="btn" href="#">GitHub</a>
-              <a class="btn" href="#">LinkedIn</a>
-              <a class="btn" href="#">Instagram</a>
+             <a class="btn" id="copyEmail" type="button">✉️ Copy Email</a>
+              <a class="btn" href="#">🐱 GitHub</a>
+              <a class="btn" href="#">💼 LinkedIn</a>
+              <a class="btn" href="#">📸 Instagram</a>
             </div>
           </div>
         </section>
@@ -266,7 +264,29 @@ const work = [
         }
       });
 
-      
+      (() => {
+    const btn = document.getElementById("copyEmail");
+    const status = document.getElementById("emailStatus");
+    if (!btn) return;
+
+    // split + mildly obfuscate
+    const u = "jonathan";       
+    const d = "jonesyco.net"; 
+    const email = `${u}@${d}`;
+
+    btn.addEventListener("click", async () => {
+      try {
+        await navigator.clipboard.writeText(email);
+        btn.textContent = "Copied ✓";
+        setTimeout(() => (btn.textContent = "Copy Email"), 1800);
+      } catch {
+        // fallback: reveal it if clipboard blocked
+        status.textContent = email;
+      }
+    });
+  })();
+
+
   // About image parallax + halo (subtle)
   (function () {
     const fx = document.getElementById("aboutImageFx");

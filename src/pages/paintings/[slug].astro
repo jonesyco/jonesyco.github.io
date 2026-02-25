@@ -1,42 +1,42 @@
 ---
 import BaseLayout from "../../layouts/BaseLayout.astro";
 import { getImage } from "astro:assets";
-import { photos } from "../../lib/photos";
-import captions from "../../data/photography.captions.json";
+import { paintings } from "../../lib/paintings";
+import captions from "../../data/paintings.captions.json";
 
 
 export async function getStaticPaths() {
-  return photos.map((p) => ({
+  return paintings.map((p) => ({
     params: { slug: p.slug },
   }));
 }
 
 const { slug } = Astro.params;
 const meta = captions[slug];
-const idx = photos.findIndex((p) => p.slug === slug);
+const idx = paintings.findIndex((p) => p.slug === slug);
 if (idx < 0) throw new Error(`Photo not found: ${slug}`);
 
-const photo = photos[idx];
-const prev = idx > 0 ? photos[idx - 1] : null;
-const next = idx < photos.length - 1 ? photos[idx + 1] : null;
+const painting = paintings[idx];
+const prev = idx > 0 ? paintings[idx - 1] : null;
+const next = idx < paintings.length - 1 ? paintings[idx + 1] : null;
 
 // Generate a display-optimized “full” image at build time.
 // You can bump width to 3200 if you want.
 const full = await getImage({
-  src: photo.image,
+  src: painting.image,
   width: 2600,
   format: "webp",
   quality: 90,
 });
 ---
 
-<BaseLayout title={`${photo.slug} · Photography · jonesyco`}>
+<BaseLayout title={`${painting.slug} · Paintings · jonesyco`}>
   <div class="wrap">
     <header class="photoTop">
-      <a class="pill" href="/photography">← Photography</a>
+      <a class="pill" href="/paintings">← Paintings</a>
       <div class="photoNav">
-        {prev ? <a class="pill" href={`/photography/${prev.slug}`} rel="prev">← Prev</a> : <span class="pill disabled">← Prev</span>}
-        {next ? <a class="pill" href={`/photography/${next.slug}`} rel="next">Next →</a> : <span class="pill disabled">Next →</span>}
+        {prev ? <a class="pill" href={`/paintings/${prev.slug}`} rel="prev">← Prev</a> : <span class="pill disabled">← Prev</span>}
+        {next ? <a class="pill" href={`/paintings/${next.slug}`} rel="next">Next →</a> : <span class="pill disabled">Next →</span>}
       </div>
     </header>
 
@@ -47,7 +47,7 @@ const full = await getImage({
       src={full.src}
       width={full.attributes.width}
       height={full.attributes.height}
-      alt={photo.slug}
+      alt={painting.slug}
       loading="eager"
       decoding="async"
     />
@@ -56,7 +56,7 @@ const full = await getImage({
   <section id="photoInfo" class="photoInfo card">
   <div class="photoInfoRow">
   <div class="photoInfoMain">
-  <h1 class="photoTitle">{meta?.title ?? photo.slug}</h1>
+  <h1 class="photoTitle">{meta?.title ?? painting.slug}</h1>
 
   {meta?.caption && (
     <p class="photoCaption">{meta.caption}</p>
@@ -84,7 +84,7 @@ const full = await getImage({
    (() => {
     const goBack = () => {
       // Always return to gallery
-      window.location.href = "/photography";
+      window.location.href = "/paintings";
     };
 
     const onKey = (e) => {

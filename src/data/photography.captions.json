@@ -151,5 +151,27 @@
       "still-life"
     ],
     "featured": false
+  },
+  "stars-over-mt-hood-1": {
+    "title": "Stars Over Mt. Hood",
+    "caption": "the stars are strange",
+    "location": "Rhododendron, Oregon",
+    "date": "2026-01-17",
+    "tags": [
+      "stars",
+      "nature"
+    ],
+    "featured": true
+  },
+  "stars-over-mt-hood-2": {
+    "title": "Constellations",
+    "caption": "the stars are strange",
+    "location": "Rhododendron, Oregon",
+    "date": "2026-01-17",
+    "tags": [
+      "stars",
+      "nature"
+    ],
+    "featured": true
   }
 }

@@ -173,5 +173,60 @@
       "nature"
     ],
     "featured": true
+  },
+  "roommates-2020": {
+    "title": "Roommates",
+    "caption": "my COVID bubble",
+    "location": "Home - Portland, Oregon",
+    "date": "2020-12-06",
+    "tags": [
+      "home",
+      "naps",
+	  "selfie"
+    ],
+    "featured": true
+  },
+  "snacks-the-grinch": {
+    "title": "Best Behavior",
+    "caption": "don't let him fool ya",
+    "location": "Home - Portland, Oregon",
+    "date": "2020-12-30",
+    "tags": [
+      "home",
+      "snacks"
+    ],
+    "featured": true
+  },
+  "cholula-4-life": {
+    "title": "Cholula&TRADE 4 Life",
+    "caption": "goes great with everything",
+    "location": "Portland, Oregon",
+    "date": "2017-07-14",
+    "tags": [
+      "owen"
+    ],
+    "featured": true
+  },
+  "family": {
+    "title": "Family",
+    "caption": "snacks & naps",
+    "location": "Home - Portland, Oregon",
+    "date": "2019-04",
+    "tags": [
+      "snacks",
+      "naps"
+    ],
+    "featured": true
+  },
+  "the-darkness": {
+    "title": "The Darkness - Roseland",
+    "caption": "justin hawkins",
+    "location": "Roseland - Portland, Oregon",
+    "date": "unknown",
+    "tags": [
+      "action",
+      "bands"
+    ],
+    "featured": true
   }
 }

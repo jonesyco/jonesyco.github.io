@@ -1,0 +1,1137 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+<title>Ducks Racing</title>
+<style>
+  html, body {
+    margin: 0; padding: 0; width: 100%; height: 100%;
+    background: #000; overflow: hidden;
+    touch-action: none; -webkit-user-select: none; user-select: none;
+    -webkit-touch-callout: none;
+  }
+  #stage {
+    position: fixed; inset: 0;
+    display: flex; align-items: center; justify-content: center;
+    background: #000;
+  }
+  #game {
+    image-rendering: pixelated;
+    image-rendering: -moz-crisp-edges;
+    background: #12222e;
+    touch-action: none;
+  }
+  #controls {
+    position: fixed; left: 0; bottom: 0; width: 100%; height: 100%;
+    pointer-events: none;
+  }
+  .btn {
+    position: absolute;
+    bottom: 4%;
+    width: 15vmin; height: 15vmin;
+    max-width: 78px; max-height: 78px;
+    border-radius: 50%;
+    background: rgba(255,255,255,0.12);
+    border: 2px solid rgba(255,255,255,0.4);
+    color: #fff; font-family: monospace; font-size: 6vmin;
+    display: flex; align-items: center; justify-content: center;
+    pointer-events: auto;
+    -webkit-user-select: none; user-select: none;
+  }
+  .btn.active { background: rgba(255,255,255,0.32); }
+  #btnLeft { left: 6%; }
+  #btnRight { left: 26%; }
+  #btnJump { right: 26%; background: rgba(100,200,255,0.16); border-color: rgba(100,200,255,0.55); }
+  #btnJump.active { background: rgba(100,200,255,0.4); }
+  #btnBoost { right: 6%; background: rgba(244,208,63,0.18); border-color: rgba(244,208,63,0.6); }
+  #btnBoost.active { background: rgba(244,208,63,0.45); }
+  #overlay {
+    position: absolute; inset: 0;
+    display: none;
+    align-items: center; justify-content: center;
+    background: rgba(0,0,0,0.72);
+    color: #fff; font-family: monospace;
+    pointer-events: auto;
+  }
+  #overlay.show { display: flex; }
+  #overlayBox { text-align: center; }
+  #overlayBox h1 { font-size: 22px; margin: 0 0 12px; color: #f4d03f; }
+  #overlayBox ol { list-style: none; padding: 0; margin: 0 0 16px; font-size: 14px; }
+  #overlayBox li { margin: 4px 0; }
+  #restartBtn, #startBtn {
+    font-family: monospace; font-size: 14px; padding: 10px 22px;
+    background: #f4d03f; color: #222; border: none; border-radius: 6px;
+    pointer-events: auto;
+  }
+  #startOverlay {
+    position: absolute; inset: 0;
+    display: flex; flex-direction: column; align-items: center; justify-content: flex-start;
+    padding-top: 5vh; box-sizing: border-box;
+    background: rgba(20,60,40,0.6);
+    pointer-events: auto;
+  }
+  #startOverlay.hide { display: none; }
+  #startBox { text-align: center; color: #fff; font-family: monospace; width: 94%; }
+  #bannerTitle {
+    font-family: 'Arial Black', 'Segoe UI Black', Impact, sans-serif;
+    font-size: clamp(32px, 13vw, 56px);
+    margin: 0 0 10px; color: #f4d03f; letter-spacing: 1px; line-height: 1.15;
+    text-shadow: 3px 3px 0 rgba(0,0,0,0.55);
+  }
+  /* Alternating letter placement -- every other letter rides higher/lower and tilts the
+     opposite way, so the title bounces rather than sitting in a flat static line. */
+  #bannerTitle .lu { display: inline-block; transform: translateY(-0.14em) rotate(-5deg); }
+  #bannerTitle .ld { display: inline-block; transform: translateY(0.1em) rotate(4deg); }
+  #controlsLegend { display: flex; flex-direction: column; gap: 5px; margin: 2px 0 20px; }
+  .ctrlRow { display: flex; align-items: center; justify-content: center; gap: 10px; font-size: 12px; }
+  .ctrlIcon {
+    display: inline-flex; align-items: center; justify-content: center;
+    min-width: 24px; height: 22px; padding: 0 5px;
+    background: rgba(255,255,255,0.15); border: 2px solid rgba(255,255,255,0.45);
+    border-radius: 6px; color: #fff; font-weight: bold;
+  }
+  .ctrlRow.jump .ctrlIcon { background: rgba(100,200,255,0.22); border-color: rgba(100,200,255,0.6); }
+  .ctrlRow.boost .ctrlIcon { background: rgba(244,208,63,0.22); border-color: rgba(244,208,63,0.65); }
+  .ctrlLabel { color: #fff; min-width: 44px; text-align: left; }
+  .ctrlKeys { color: rgba(223,230,238,0.7); font-size: 10px; }
+  .lengthRow { display: flex; gap: 8px; justify-content: center; margin-bottom: 22px; }
+  .lengthBtn {
+    font-family: monospace; font-size: 12px; padding: 8px 14px;
+    background: rgba(255,255,255,0.12); border: 2px solid rgba(255,255,255,0.45);
+    color: #fff; border-radius: 6px; pointer-events: auto;
+  }
+  .lengthBtn.selected { background: #f4d03f; color: #222; border-color: #f4d03f; }
+  #startBtn { font-size: 16px; padding: 12px 32px; }
+</style>
+</head>
+<body>
+<div id="stage">
+  <canvas id="game" width="270" height="480"></canvas>
+  <div id="controls">
+    <div class="btn" id="btnLeft">◀</div>
+    <div class="btn" id="btnRight">▶</div>
+    <div class="btn" id="btnJump">▲</div>
+    <div class="btn" id="btnBoost">B</div>
+    <div id="overlay"><div id="overlayBox">
+      <h1 id="overlayTitle">FINISH!</h1>
+      <ol id="results"></ol>
+      <button id="restartBtn">RACE AGAIN</button>
+    </div></div>
+    <div id="startOverlay"><div id="startBox">
+      <h1 id="bannerTitle"><span class="lu">D</span><span class="ld">U</span><span class="lu">C</span><span class="ld">K</span><span class="lu">S</span> <span class="ld">R</span><span class="lu">A</span><span class="ld">C</span><span class="lu">I</span><span class="ld">N</span><span class="lu">G</span></h1>
+      <div id="controlsLegend">
+        <div class="ctrlRow steer"><span class="ctrlIcon">◀ ▶</span><span class="ctrlLabel">Steer</span><span class="ctrlKeys">←→ / A D</span></div>
+        <div class="ctrlRow jump"><span class="ctrlIcon">▲</span><span class="ctrlLabel">Jump</span><span class="ctrlKeys">Space</span></div>
+        <div class="ctrlRow boost"><span class="ctrlIcon">B</span><span class="ctrlLabel">Boost</span><span class="ctrlKeys">↑ / W</span></div>
+      </div>
+      <div class="lengthRow">
+        <button class="lengthBtn" data-len="short">SHORT</button>
+        <button class="lengthBtn selected" data-len="medium">MEDIUM</button>
+        <button class="lengthBtn" data-len="long">LONG</button>
+      </div>
+      <button id="startBtn">START RACE</button>
+    </div></div>
+  </div>
+</div>
+
+<script>
+'use strict';
+
+/* =========================================================================================
+   CONFIG / CONSTANTS
+   ========================================================================================= */
+const W = 270, H = 480;               // fixed internal "16-bit console" resolution
+const LANES = 5;                      // playable lane coordinate range: 0..LANES-1
+const TILE_W = 34, TILE_H = 17;       // dimetric tile size, 2:1 pixel ratio
+
+const BASE_SPEED = 3.0;               // rows/sec forward speed on neutral ground
+const STEER_SPEED = 3.2;              // lanes/sec lateral steering speed while held
+const BOOST_MULT = 1.55;
+const BOOST_DURATION = 1.0;           // seconds of boost per full meter
+const BOOST_RECHARGE_TIME = 4.0;      // seconds to refill an empty meter
+const SWIM_MULT = 0.7;
+const FLY_MULT = 1.25;
+const STUMBLE_MULT = 0.15;
+const STUMBLE_DURATION = 0.4;
+const JUMP_DURATION = 0.45;
+const STAMINA_DRAIN_TIME = 5.0;       // seconds of flying to fully drain stamina
+const STAMINA_RECHARGE_TIME = 1.6;    // seconds on solid ground to fully refill
+const RESPAWN_DURATION = 1.5;
+
+// The track is built from repeating "laps" of biome segments (Desert always leads into a
+// Canyon -- arid approach, then the ground actually drops away), plus one final grass stretch
+// before the finish line. Race length just controls how many laps get chained together.
+const TRACK_LAP = [
+  { biome: 'grass',  len: 14 },
+  { biome: 'forest', len: 12 },
+  { biome: 'river',  len: 14 },
+  { biome: 'grass',  len: 8  },
+  { biome: 'desert', len: 10 },
+  { biome: 'canyon', len: 14 },
+];
+const TRACK_FINAL_STRETCH = { biome: 'grass', len: 16 };
+const RACE_LAPS = { short: 1, medium: 2, long: 3 };
+
+let TRACK = [];
+let FINISH_Z = 0;
+
+function buildTrack(lengthKey){
+  const laps = RACE_LAPS[lengthKey] || RACE_LAPS.medium;
+  TRACK = [];
+  let z = 0;
+  for (let lap = 0; lap < laps; lap++){
+    for (const seg of TRACK_LAP){
+      TRACK.push({ biome: seg.biome, start: z, end: z + seg.len });
+      z += seg.len;
+    }
+  }
+  TRACK.push({ biome: TRACK_FINAL_STRETCH.biome, start: z, end: z + TRACK_FINAL_STRETCH.len });
+  z += TRACK_FINAL_STRETCH.len;
+  FINISH_Z = z;
+}
+
+function getSegmentAt(z){
+  for (const seg of TRACK) if (z >= seg.start && z < seg.end) return seg;
+  return TRACK[TRACK.length - 1];
+}
+function getBiomeAt(z){ return z >= FINISH_Z ? 'grass' : getSegmentAt(z).biome; }
+
+/* =========================================================================================
+   COLOR HELPERS -- one shared parser so shade()/mix() interop regardless of which of them
+   produced the input string (feeding a shade() result into mix() with mismatched formats is
+   a classic silent bug: canvas treats a resulting NaN color as invalid and just keeps the
+   previous fillStyle, which reads as random black shapes).
+   ========================================================================================= */
+function parseColor(str){
+  if (str[0] === '#'){ const n = parseInt(str.slice(1), 16); return [n>>16, (n>>8)&0xff, n&0xff]; }
+  const parts = str.slice(str.indexOf('(')+1, str.indexOf(')')).split(',').map(Number);
+  return [parts[0], parts[1], parts[2]];
+}
+function shade(color, amt){
+  const [r0,g0,b0] = parseColor(color);
+  const r=Math.max(0,Math.min(255,r0+amt)), g=Math.max(0,Math.min(255,g0+amt)), b=Math.max(0,Math.min(255,b0+amt));
+  return `rgb(${r},${g},${b})`;
+}
+function mix(colorA, colorB, t){
+  const [ar,ag,ab] = parseColor(colorA), [br,bg,bb] = parseColor(colorB);
+  return `rgb(${Math.round(ar+(br-ar)*t)},${Math.round(ag+(bg-ag)*t)},${Math.round(ab+(bb-ab)*t)})`;
+}
+function hash(a,b){ const x = Math.sin(a*127.1 + b*311.7) * 43758.5453; return x - Math.floor(x); }
+
+/* =========================================================================================
+   ISOMETRIC PROJECTION -- true dimetric grid. Forward (increasing z/"row") projects to
+   up-and-right on screen, lane changes project to up-and-left -- the classic Crossy-Road-
+   style diamond grid, not a flat top-down band. The camera anchor tracks the player's own
+   (z, x) each frame so the player stays fixed on screen while the world scrolls underneath.
+   ========================================================================================= */
+function project(z, lane, camZ, camLane, anchorX, anchorY){
+  const dz = z - camZ, dl = lane - camLane;
+  return {
+    x: anchorX + (dz - dl) * (TILE_W/2),
+    y: anchorY - (dz + dl) * (TILE_H/2),
+  };
+}
+
+/* =========================================================================================
+   TRACK CONTENT -- obstacles (trees/cacti) and river logs, generated once at race start.
+   ========================================================================================= */
+let obstacles = [];   // { z, lane, type: 'tree'|'cactus', variant, scale }
+let logs = [];         // { zCenter, zHalf, homeLane, amplitude, speed, phase }
+
+function generateTrackContent(){
+  obstacles = [];
+  logs = [];
+  for (const seg of TRACK){
+    if (seg.biome === 'forest' || seg.biome === 'desert'){
+      const type = seg.biome === 'forest' ? 'tree' : 'cactus';
+      for (let z = seg.start + 1.5; z < seg.end - 0.5; z += 1.6 + Math.random()*1.2){
+        const blockedLanes = new Set();
+        const count = 1 + (Math.random() < 0.4 ? 1 : 0);
+        for (let i=0;i<count;i++){
+          let lane;
+          let tries = 0;
+          do { lane = Math.floor(Math.random()*LANES); tries++; } while (blockedLanes.has(lane) && tries < 6);
+          blockedLanes.add(lane);
+          if (blockedLanes.size >= LANES) break; // never fully wall off the track
+          // Some obstacles are jumpable (trees/cacti -- hop the Jump button and clear them);
+          // boulders are not -- too big to leap, always worth steering around instead.
+          const isBoulder = Math.random() < 0.18;
+          obstacles.push({
+            z: z + (Math.random()-0.5)*0.3,
+            lane,
+            type: isBoulder ? 'boulder' : type,
+            variant: isBoulder ? 'boulder' : (type === 'tree' ? ['pine','round','shrub'][Math.floor(Math.random()*3)] : 'cactus'),
+            scale: 0.9 + Math.random()*0.4,
+            jumpable: !isBoulder,
+          });
+        }
+      }
+    }
+    if (seg.biome === 'river'){
+      for (let z = seg.start + 1.5; z < seg.end - 1.5; z += 2.6 + Math.random()*1.0){
+        logs.push({
+          zCenter: z, zHalf: 1.0,
+          homeLane: 0.6 + Math.random()*(LANES-1.2),
+          amplitude: 1.1 + Math.random()*1.0,
+          speed: 0.35 + Math.random()*0.35,
+          phase: Math.random()*Math.PI*2,
+        });
+      }
+    }
+  }
+}
+
+function logAt(z){
+  for (const log of logs) if (z >= log.zCenter - log.zHalf && z <= log.zCenter + log.zHalf) return log;
+  return null;
+}
+function logLaneAt(log, t){
+  return log.homeLane + log.amplitude * Math.sin(t*log.speed + log.phase);
+}
+function treeBlockedLane(z, lane){
+  // returns the obstacle within a tight z/lane window, or null -- used both for collision and AI dodging
+  for (const o of obstacles){
+    if (Math.abs(o.z - z) < 0.55 && Math.abs(o.lane - lane) < 0.55) return o;
+  }
+  return null;
+}
+
+/* =========================================================================================
+   AUDIO -- plays quack.mp3 (sibling file next to this HTML). Each call clones the element so
+   overlapping quacks from different ducks don't cut each other off, and playbackRate gives
+   each duck a slightly different pitch from the same one clip. Browsers block audio playback
+   until a real user gesture; the first touch/click/keydown does a silent play+pause purely to
+   satisfy that policy, so later programmatic quacks are allowed through.
+   ========================================================================================= */
+const quackClip = new Audio('quack.mp3');
+quackClip.preload = 'auto';
+let audioUnlocked = false;
+function unlockAudio(){
+  if (audioUnlocked) return;
+  audioUnlocked = true;
+  const a = quackClip.cloneNode();
+  a.volume = 0;
+  a.play().then(()=>a.pause()).catch(()=>{});
+}
+['touchstart','mousedown','keydown'].forEach(evt => document.addEventListener(evt, unlockAudio, {once:true}));
+
+function playQuack(pitch){
+  const a = quackClip.cloneNode();
+  a.playbackRate = Math.max(0.5, Math.min(3, pitch * (0.92 + Math.random()*0.16)));
+  a.volume = 0.5;
+  a.play().catch(()=>{});
+}
+
+/* =========================================================================================
+   DUCK ENTITY + STATE MACHINE
+   States: RUNNING (grass/forest/desert), SWIMMING (river, no log under it), ON_LOG (river,
+   log under it -- carried sideways by the log's drift, no swim penalty), FLYING (canyon,
+   stamina draining), STUMBLE (briefly slowed after hitting an obstacle), RESPAWNING (fell in
+   a canyon, frozen for RESPAWN_DURATION before being placed back at that canyon's near edge).
+   ========================================================================================= */
+function makeDuck(color, isPlayer){
+  return {
+    color, isPlayer,
+    x: 2, z: 0,
+    state: 'RUNNING',
+    stamina: 1, boost: 1, boosting: false,
+    stumbleTimer: 0, respawnTimer: 0, jumpTimer: 0,
+    ridingLog: null,
+    aiTargetLane: 2,
+    bob: Math.random()*10,
+    place: 0,
+    quackTimer: 1.5 + Math.random()*4,   // staggered so all 4 ducks don't quack in unison
+    quackPitch: 0.85 + Math.random()*0.3,
+    finished: false,
+  };
+}
+
+function updateDuck(duck, dt, t, input){
+  duck.bob += dt * (duck.state === 'RUNNING' ? 6 : duck.state === 'FLYING' ? 9 : 3);
+
+  // periodic quack, independent of state -- ducks quack even mid-flight or mid-stumble
+  duck.quackTimer -= dt;
+  if (duck.quackTimer <= 0){
+    playQuack(duck.quackPitch);
+    duck.quackTimer = 4 + Math.random()*5;
+  }
+
+  if (duck.jumpTimer > 0) duck.jumpTimer = Math.max(0, duck.jumpTimer - dt);
+
+  if (duck.state === 'RESPAWNING'){
+    duck.respawnTimer -= dt;
+    if (duck.respawnTimer <= 0){
+      duck.state = 'RUNNING';
+      duck.stamina = 1;
+      duck.z = duck.respawnZ;
+      duck.x = duck.respawnX;
+    }
+    return;
+  }
+
+  const biome = getBiomeAt(duck.z);
+
+  // -- lateral steering (continuous strafe, not discrete lane snapping) --
+  let steer = input.steer || 0;
+  if (duck.ridingLog) steer = steer; // player steering still applies on top of the log's own drift
+  duck.x += steer * STEER_SPEED * dt;
+  duck.x = Math.max(0, Math.min(LANES-1, duck.x));
+
+  // -- boost meter --
+  if (input.boost && duck.boost > 0 && duck.stumbleTimer <= 0){
+    duck.boosting = true;
+    duck.boost = Math.max(0, duck.boost - dt/BOOST_DURATION);
+  } else {
+    duck.boosting = false;
+  }
+  if (!duck.boosting) duck.boost = Math.min(1, duck.boost + dt/BOOST_RECHARGE_TIME);
+
+  // -- stumble recovery --
+  if (duck.stumbleTimer > 0){
+    duck.stumbleTimer -= dt;
+    duck.state = 'STUMBLE';
+  } else if (biome === 'river'){
+    // Log-riding: if the duck's lateral position overlaps a log currently spanning this row,
+    // it rides that log -- inherits the log's own left/right drift as free lateral motion and
+    // pays no swim penalty. Off a log in a river row, it's SWIMMING at reduced speed instead.
+    const log = logAt(duck.z);
+    const logLane = log ? logLaneAt(log, t) : null;
+    if (log && Math.abs(duck.x - logLane) < 0.85){
+      duck.state = 'ON_LOG';
+      duck.ridingLog = log;
+    } else {
+      duck.state = 'SWIMMING';
+      duck.ridingLog = null;
+    }
+  } else if (biome === 'canyon'){
+    duck.state = 'FLYING';
+    duck.ridingLog = null;
+  } else {
+    duck.state = 'RUNNING';
+    duck.ridingLog = null;
+  }
+
+  // Log drift: apply the *change* in the log's lane position this frame as extra lateral
+  // velocity on the duck, so riding a log carries you sideways independent of your own steering.
+  if (duck.state === 'ON_LOG' && duck.ridingLog){
+    const before = logLaneAt(duck.ridingLog, t - dt);
+    const after = logLaneAt(duck.ridingLog, t);
+    duck.x += (after - before);
+    duck.x = Math.max(0, Math.min(LANES-1, duck.x));
+  }
+
+  // -- flight stamina: drains while FLYING, recharges on solid ground, plummet at zero --
+  if (duck.state === 'FLYING'){
+    duck.stamina -= dt/STAMINA_DRAIN_TIME;
+    if (duck.stamina <= 0){
+      duck.stamina = 0;
+      const seg = getSegmentAt(duck.z);
+      duck.state = 'RESPAWNING';
+      duck.respawnTimer = RESPAWN_DURATION;
+      duck.respawnZ = seg.start - 0.6;
+      duck.respawnX = duck.x;
+      duck.ridingLog = null;
+      return;
+    }
+  } else {
+    duck.stamina = Math.min(1, duck.stamina + dt/STAMINA_RECHARGE_TIME);
+  }
+
+  // -- jump: only from a standing start on solid ground, and only takes effect against
+  // obstacles flagged jumpable (trees/cacti) -- boulders are too big to hop over.
+  if (input.jump && duck.jumpTimer <= 0 && duck.stumbleTimer <= 0 && duck.state === 'RUNNING'){
+    duck.jumpTimer = JUMP_DURATION;
+  }
+
+  // -- tree/cactus/boulder collision: momentary stumble, not a hard stop -- unless jumping
+  // over a jumpable obstacle, which clears it with no penalty at all.
+  if (duck.stumbleTimer <= 0 && (biome === 'forest' || biome === 'desert')){
+    const hit = treeBlockedLane(duck.z, duck.x);
+    if (hit && !(hit.jumpable && duck.jumpTimer > 0)){
+      duck.state = 'STUMBLE';
+      duck.stumbleTimer = STUMBLE_DURATION;
+      duck.x += duck.x > hit.lane ? 0.25 : -0.25;
+    }
+  }
+
+  // -- forward speed: continuous multiplier by state, no per-tile hopping --
+  let mult = 1;
+  if (duck.state === 'SWIMMING') mult = SWIM_MULT;
+  else if (duck.state === 'FLYING') mult = FLY_MULT;
+  else if (duck.state === 'STUMBLE') mult = STUMBLE_MULT;
+  const boostMult = duck.boosting ? BOOST_MULT : 1;
+  duck.z += BASE_SPEED * mult * boostMult * dt * (duck.speedFactor || 1);
+}
+
+/* =========================================================================================
+   AI
+   ========================================================================================= */
+const aiDucks = [];
+
+function updateAI(duck, dt, t, player){
+  // rubber-banding: nudge AI speed based on the gap to the PLAYER specifically
+  const gap = player.z - duck.z;
+  duck.speedFactor = 1 + Math.max(-0.12, Math.min(0.18, gap * 0.02));
+
+  const lookAheadZ = duck.z + 2.2;
+  const biomeAhead = getBiomeAt(lookAheadZ);
+  let target = duck.aiTargetLane;
+
+  if (biomeAhead === 'river'){
+    const log = logAt(lookAheadZ) || logAt(duck.z);
+    if (log) target = logLaneAt(log, t);
+  } else if (biomeAhead === 'forest' || biomeAhead === 'desert'){
+    const blocked = treeBlockedLane(lookAheadZ, duck.x);
+    if (blocked){
+      target = blocked.lane <= LANES/2 ? Math.min(LANES-1, blocked.lane + 1.4) : Math.max(0, blocked.lane - 1.4);
+    } else if (Math.random() < 0.01){
+      target = Math.random()*(LANES-1);
+    }
+  } else if (Math.random() < 0.004){
+    target = Math.random()*(LANES-1);
+  }
+  duck.aiTargetLane = Math.max(0, Math.min(LANES-1, target));
+
+  const diff = duck.aiTargetLane - duck.x;
+  const steer = Math.max(-1, Math.min(1, diff * 2.2));
+
+  // spend boost when trailing, or proactively before a canyon to help clear it before stamina runs out
+  const wantsBoost = (gap > 3 && duck.boost > 0.3) ||
+    (getBiomeAt(duck.z+1) === 'canyon' && duck.stamina > 0.6 && duck.boost > 0.5);
+
+  // if an obstacle is already lined up right ahead (too late to dodge sideways), jump it
+  // instead -- but only if it's actually jumpable, since jumping a boulder wouldn't help.
+  const imminent = treeBlockedLane(duck.z + 0.3, duck.x);
+  const wantsJump = !!(imminent && imminent.jumpable);
+
+  updateDuck(duck, dt, t, { steer, boost: wantsBoost, jump: wantsJump });
+}
+
+// Ducks are solid to each other: when two overlap laterally at nearly the same z, they push
+// apart sideways rather than passing through -- a boosting duck barges through more than it
+// gets pushed, so using Boost to bump a rival out of your lane is a deliberate, usable tactic.
+function resolveBumps(){
+  const BUMP_Z_RANGE = 0.6, BUMP_X_RANGE = 0.75;
+  for (let i=0;i<ducks.length;i++){
+    for (let j=i+1;j<ducks.length;j++){
+      const a = ducks[i], b = ducks[j];
+      if (a.finished || b.finished) continue;
+      if (Math.abs(a.z-b.z) > BUMP_Z_RANGE) continue;
+      let dx = a.x - b.x;
+      if (Math.abs(dx) >= BUMP_X_RANGE) continue;
+      if (Math.abs(dx) < 0.001) dx = (Math.random()<0.5 ? -1 : 1) * 0.01;
+      const overlap = BUMP_X_RANGE - Math.abs(dx);
+      const dir = Math.sign(dx);
+      const aResist = a.boosting ? 0.25 : 1, bResist = b.boosting ? 0.25 : 1;
+      const total = aResist + bResist;
+      a.x += dir * overlap * (bResist/total);
+      b.x -= dir * overlap * (aResist/total);
+      a.x = Math.max(0, Math.min(LANES-1, a.x));
+      b.x = Math.max(0, Math.min(LANES-1, b.x));
+    }
+  }
+}
+
+/* =========================================================================================
+   RENDERING -- terrain
+   ========================================================================================= */
+function drawDiamond(ctx, cx, cy, w, h, fill, stroke){
+  ctx.beginPath();
+  ctx.moveTo(cx, cy-h/2); ctx.lineTo(cx+w/2, cy); ctx.lineTo(cx, cy+h/2); ctx.lineTo(cx-w/2, cy);
+  ctx.closePath(); ctx.fillStyle = fill; ctx.fill();
+  if (stroke){ ctx.strokeStyle = stroke; ctx.lineWidth = 1; ctx.stroke(); }
+}
+function drawElevatedTile(ctx, cx, groundY, w, h, elevation, topFill, wallL, wallR, topStroke){
+  if (elevation !== 0){
+    const topY = groundY - elevation;
+    ctx.beginPath();
+    ctx.moveTo(cx-w/2, topY); ctx.lineTo(cx, topY+h/2); ctx.lineTo(cx, groundY+h/2); ctx.lineTo(cx-w/2, groundY);
+    ctx.closePath(); ctx.fillStyle = wallL; ctx.fill();
+    ctx.beginPath();
+    ctx.moveTo(cx+w/2, topY); ctx.lineTo(cx, topY+h/2); ctx.lineTo(cx, groundY+h/2); ctx.lineTo(cx+w/2, groundY);
+    ctx.closePath(); ctx.fillStyle = wallR; ctx.fill();
+    drawDiamond(ctx, cx, topY, w, h, topFill, topStroke);
+  } else drawDiamond(ctx, cx, groundY, w, h, topFill, topStroke);
+}
+// Tuned much gentler than the concept mockups: every tile draws its own wall face down to a
+// flat reference regardless of its neighbor's height (no shared-edge clipping), so even mild
+// per-tile height variation reads as a visible staircase at gameplay's smaller tile scale --
+// dial the amplitude down rather than fighting that with more geometry.
+function hillHeight(z, lane){
+  const rolling = 3.5*Math.sin(z*0.4+lane*0.4) + 2*Math.sin(lane*0.8-z*0.18) + 1.5;
+  const peakBoost = Math.max(0, 5*Math.sin(z*0.15+lane*0.25+2) - 3.5);
+  return Math.max(0, rolling + peakBoost);
+}
+const STONE_LINE = 7;
+function drawGrassTile(ctx, cx, groundY, w, h, z, lane, isForest){
+  const height = hillHeight(z, lane);
+  const base = isForest ? '#2f6b3a' : '#4caf50';
+  const peak = isForest ? '#5a8f4e' : '#9ccf5a';
+  const valley = shade(base, -12);
+  const top = mix(valley, peak, Math.min(1, height/16));
+  const topY = groundY - height;
+  const exposedStone = height > STONE_LINE;
+  const wallBase = exposedStone ? '#787878' : '#6b4a2c';
+  drawElevatedTile(ctx, cx, groundY, w, h, height, top, shade(wallBase,-8), shade(wallBase,-28), null);
+  if (!exposedStone && height > 0){
+    ctx.fillStyle = shade(base,-6);
+    ctx.beginPath(); ctx.moveTo(cx-w/2,topY); ctx.lineTo(cx,topY+h/2); ctx.lineTo(cx,topY+h/2+4); ctx.lineTo(cx-w/2,topY+4);
+    ctx.closePath(); ctx.fill();
+    ctx.fillStyle = shade(base,-24);
+    ctx.beginPath(); ctx.moveTo(cx+w/2,topY); ctx.lineTo(cx,topY+h/2); ctx.lineTo(cx,topY+h/2+4); ctx.lineTo(cx+w/2,topY+4);
+    ctx.closePath(); ctx.fill();
+  }
+  for (let i=0;i<2;i++){
+    const rx=(hash(z*3+i,lane*7)-0.5)*w*0.5, ry=(hash(z*5+i,lane*11)-0.5)*h*0.35;
+    ctx.fillStyle = shade(base, hash(z,lane*i+1)>0.5?14:-10);
+    ctx.fillRect(cx+rx, topY+ry, 2, 2);
+  }
+  if (exposedStone && hash(z,lane) > 0.6){
+    ctx.fillStyle='#8a8a8a'; ctx.beginPath(); ctx.ellipse(cx+(hash(z,lane+9)-0.5)*w*0.4, topY-3, 5, 4, 0,0,Math.PI*2); ctx.fill();
+  }
+  return height;
+}
+function drawDesertTile(ctx, cx, groundY, w, h, z, lane){
+  const height = Math.max(0, 2*Math.sin(z*0.4+lane*0.3)+1);
+  const base = '#c9a066';
+  const top = shade(base, height*3 - 3);
+  drawElevatedTile(ctx, cx, groundY, w, h, height, top, shade(base,-30), shade(base,-46), null);
+  const topY = groundY - height;
+  for (let i=0;i<2;i++){
+    const rx=(hash(z*3+i,lane*7)-0.5)*w*0.5, ry=(hash(z*5+i,lane*11)-0.5)*h*0.35;
+    ctx.fillStyle = shade(base, hash(z,lane*i+2)>0.5?10:-12);
+    ctx.fillRect(cx+rx, topY+ry, 2, 2);
+  }
+  return height;
+}
+function drawWaterTile(ctx, cx, groundY, w, h, t, z){
+  const depth = 5;
+  drawElevatedTile(ctx, cx, groundY, w, h, -depth, '#2f7fbf', '#1d5a8c', '#154870', '#1d5a8c');
+  const floorY = groundY + depth;
+  ctx.save();
+  ctx.beginPath();
+  ctx.moveTo(cx,floorY-h/2); ctx.lineTo(cx+w/2,floorY); ctx.lineTo(cx,floorY+h/2); ctx.lineTo(cx-w/2,floorY);
+  ctx.closePath(); ctx.clip();
+  ctx.strokeStyle='rgba(255,255,255,0.35)'; ctx.lineWidth=1.2;
+  const phase=(t/500+z*0.4)%4;
+  for (let i=-1;i<3;i++){ const off=((i+phase)%4)-2;
+    ctx.beginPath(); ctx.moveTo(cx-w/2+off*8, floorY-3); ctx.lineTo(cx-w/2+off*8+6, floorY+3); ctx.stroke(); }
+  ctx.restore();
+}
+const MESA_BANDS_L = ['#e0c27a','#c1652d','#a8431f','#c98a3f','#8a4a1f','#d9b877','#6f3418','#5c2e1e'];
+const MESA_BANDS_R = ['#a8895a','#8f4620','#6f2c14','#96652c','#5c3012','#a8895a','#4a2410','#2c150e'];
+function drawCanyonRim(ctx, cx, groundY, w, h, seedZ, seedLane){
+  const depth = 120;
+  const jitter = (hash(seedZ, seedLane) - 0.5) * 6;
+  const n = MESA_BANDS_L.length;
+  const bandJitter = hash(seedZ*3, seedLane*5);
+  for (let i=0;i<n;i++){
+    const t0=i/n, t1=(i+1)/n;
+    const y0 = groundY + jitter + depth*t0 + bandJitter*4*Math.sin(i);
+    const y1 = groundY + jitter + depth*t1 + bandJitter*4*Math.sin(i+1);
+    ctx.beginPath();
+    ctx.moveTo(cx-w/2,y0); ctx.lineTo(cx,y0+h/2); ctx.lineTo(cx,y1+h/2); ctx.lineTo(cx-w/2,y1);
+    ctx.closePath(); ctx.fillStyle=MESA_BANDS_L[i]; ctx.fill();
+    ctx.beginPath();
+    ctx.moveTo(cx+w/2,y0); ctx.lineTo(cx,y0+h/2); ctx.lineTo(cx,y1+h/2); ctx.lineTo(cx+w/2,y1);
+    ctx.closePath(); ctx.fillStyle=MESA_BANDS_R[i]; ctx.fill();
+    ctx.strokeStyle='rgba(0,0,0,0.35)'; ctx.lineWidth=1;
+    ctx.beginPath(); ctx.moveTo(cx-w/2,y1); ctx.lineTo(cx,y1+h/2); ctx.lineTo(cx+w/2,y1); ctx.stroke();
+  }
+  ctx.fillStyle = '#d9713a';
+  for (let k=0;k<3;k++){
+    const t0=k/3-0.16, rx=cx-w/2+t0*w+(hash(seedZ+k,seedLane)-0.5)*6;
+    const ry = groundY - h*0.06 + jitter*0.3;
+    ctx.beginPath(); ctx.moveTo(rx-3,ry+4); ctx.lineTo(rx+3,ry+4); ctx.lineTo(rx,ry-4); ctx.closePath(); ctx.fill();
+  }
+  ctx.strokeStyle = 'rgba(0,0,0,0.55)'; ctx.lineWidth = 2;
+  ctx.beginPath(); ctx.moveTo(cx-w/2,groundY+jitter); ctx.lineTo(cx,groundY+h/2+jitter); ctx.lineTo(cx+w/2,groundY+jitter); ctx.stroke();
+}
+// Open chasm interior: no strata, no mapped floor -- just haze that darkens toward the middle
+// of the gorge (min distance to either rim), so the space itself reads as empty, not textured.
+function drawChasmVoid(ctx, cx, groundY, w, h, distFromNearestRim){
+  const t = Math.min(1, distFromNearestRim/3.5);
+  drawDiamond(ctx, cx, groundY, w, h, mix('#4a2f1c', '#04040a', t), null);
+}
+function drawChasmMist(ctx, cx, y, t, seed){
+  const drift = Math.sin(t/2600 + seed) * 12;
+  drawCloud(ctx, cx+drift, y, 0.5, 0.32, '#dfe6ea');
+}
+
+function drawTree(ctx, cx, cy, type, scale){
+  ctx.save(); ctx.translate(cx,cy); ctx.scale(scale,scale);
+  ctx.beginPath(); ctx.ellipse(0,4,10,4,0,0,Math.PI*2); ctx.fillStyle='rgba(0,0,0,0.3)'; ctx.fill();
+  if (type==='pine'){
+    ctx.fillStyle='#5a3a20'; ctx.fillRect(-3,-2,6,10); ctx.fillStyle='#1f5c2c';
+    for (let i=0;i<3;i++){ const w=15-i*3.2, yy=-6-i*9;
+      ctx.beginPath(); ctx.moveTo(-w,yy+10); ctx.lineTo(w,yy+10); ctx.lineTo(0,yy-6); ctx.closePath(); ctx.fill(); }
+  } else if (type==='round'){
+    ctx.fillStyle='#6b4423'; ctx.beginPath(); ctx.moveTo(-4,6); ctx.lineTo(4,6); ctx.lineTo(3,-8); ctx.lineTo(-3,-8); ctx.closePath(); ctx.fill();
+    ctx.beginPath(); ctx.ellipse(0,-19,13,12,0,0,Math.PI*2); ctx.fillStyle='#2e6b2f'; ctx.fill();
+    ctx.beginPath(); ctx.ellipse(-6,-24,7,6,0,0,Math.PI*2); ctx.fillStyle='#377a38'; ctx.fill();
+  } else {
+    ctx.beginPath(); ctx.ellipse(0,-4,9,7,0,0,Math.PI*2); ctx.fillStyle='#4a9c4f'; ctx.fill();
+  }
+  ctx.restore();
+}
+function drawCactus(ctx, cx, cy, scale){
+  ctx.save(); ctx.translate(cx,cy); ctx.scale(scale,scale);
+  ctx.beginPath(); ctx.ellipse(0,3,7,3,0,0,Math.PI*2); ctx.fillStyle='rgba(0,0,0,0.3)'; ctx.fill();
+  ctx.fillStyle = '#3f7d3a';
+  ctx.beginPath(); ctx.roundRect(-3,-18,6,20,2); ctx.fill();
+  ctx.beginPath(); ctx.roundRect(-10,-12,7,5,2); ctx.fill();
+  ctx.beginPath(); ctx.roundRect(-10,-17,4,10,2); ctx.fill();
+  ctx.beginPath(); ctx.roundRect(4,-9,7,5,2); ctx.fill();
+  ctx.beginPath(); ctx.roundRect(7,-14,4,9,2); ctx.fill();
+  ctx.restore();
+}
+function drawBoulder(ctx, cx, cy, scale){
+  ctx.save(); ctx.translate(cx,cy); ctx.scale(scale,scale);
+  ctx.beginPath(); ctx.ellipse(0,4,9,3.5,0,0,Math.PI*2); ctx.fillStyle='rgba(0,0,0,0.3)'; ctx.fill();
+  ctx.beginPath(); ctx.ellipse(0,-4,10,9,0,0,Math.PI*2); ctx.fillStyle='#8a8a8a'; ctx.fill();
+  ctx.strokeStyle='#5a5a5a'; ctx.lineWidth=1.3; ctx.stroke();
+  ctx.beginPath(); ctx.ellipse(-3,-7,4,3,0.4,0,Math.PI*2); ctx.fillStyle='#a3a3a3'; ctx.fill();
+  ctx.beginPath(); ctx.moveTo(-5,-2); ctx.lineTo(2,-6); ctx.lineTo(5,2); ctx.strokeStyle='rgba(0,0,0,0.25)'; ctx.lineWidth=1; ctx.stroke();
+  ctx.restore();
+}
+function drawLog(ctx, cx, cy, w){
+  ctx.save();
+  ctx.beginPath(); ctx.ellipse(cx,cy,w/2,6,0,0,Math.PI*2); ctx.fillStyle='#8a5a34'; ctx.fill(); ctx.strokeStyle='#5c3a20'; ctx.stroke();
+  ctx.beginPath(); ctx.ellipse(cx-w/2+6,cy,4,5,0,0,Math.PI*2); ctx.fillStyle='#6b4423'; ctx.fill();
+  ctx.beginPath(); ctx.ellipse(cx+w/2-6,cy,4,5,0,0,Math.PI*2); ctx.fillStyle='#6b4423'; ctx.fill();
+  ctx.restore();
+}
+function drawCloud(ctx, cx, cy, scale, alpha, color){
+  ctx.save(); ctx.globalAlpha = alpha; ctx.fillStyle = color || '#ffffff';
+  [[-16,0,12],[0,-5,16],[18,0,12],[32,2,9],[-28,3,9]].forEach(([dx,dy,r])=>{
+    ctx.beginPath(); ctx.ellipse(cx+dx*scale, cy+dy*scale, r*scale, r*0.7*scale, 0, 0, Math.PI*2); ctx.fill();
+  });
+  ctx.restore();
+}
+function drawSun(ctx,x,y){
+  const glow = ctx.createRadialGradient(x,y,0,x,y,55);
+  glow.addColorStop(0,'rgba(255,250,210,0.9)'); glow.addColorStop(0.4,'rgba(255,240,160,0.4)'); glow.addColorStop(1,'rgba(255,240,160,0)');
+  ctx.fillStyle = glow; ctx.beginPath(); ctx.arc(x,y,55,0,Math.PI*2); ctx.fill();
+  ctx.fillStyle = '#fff8dc'; ctx.beginPath(); ctx.arc(x,y,12,0,Math.PI*2); ctx.fill();
+}
+function drawSky(ctx, t){
+  const g = ctx.createLinearGradient(0,0,0,H*0.55);
+  g.addColorStop(0,'#4a9fe0'); g.addColorStop(0.7,'#a9d8f0'); g.addColorStop(1,'#dff0f7');
+  ctx.fillStyle=g; ctx.fillRect(0,0,W,H*0.55);
+  drawSun(ctx, 40, 55);
+  const rows = [{y:50,speed:0.005,scale:0.9},{y:90,speed:0.008,scale:0.65},{y:32,speed:0.0035,scale:0.55}];
+  rows.forEach((r,i)=>{
+    const span = W+140; const x = ((t*r.speed + i*120) % span) - 70;
+    drawCloud(ctx, x, r.y, r.scale, 0.85);
+    drawCloud(ctx, x-span, r.y, r.scale, 0.85);
+  });
+}
+
+// Track edges rendered by the terrain loop (see render()) -- shared so the finish/start line
+// props span the *entire* visible ground, shoulder included, not just the 5 playable lanes.
+const TRACK_RENDER_LANE_MIN = -4.6, TRACK_RENDER_LANE_MAX = 8.6;
+
+// Physical finish-line arch spanning the whole track (poles at both edges + a checkered banner
+// between their tops), not just the small flag icon in the HUD -- visible from a distance as
+// the player approaches so there's a real landmark to race toward.
+function drawFinishBanner(ctx, camZ, camLane, anchorX, anchorY){
+  const p1 = project(FINISH_Z, TRACK_RENDER_LANE_MIN, camZ, camLane, anchorX, anchorY);
+  const p2 = project(FINISH_Z, TRACK_RENDER_LANE_MAX, camZ, camLane, anchorX, anchorY);
+  const poleH = 60, bh = 16;
+  [p1,p2].forEach(p=>{
+    ctx.fillStyle = '#e0e0e0';
+    ctx.fillRect(p.x-2, p.y-poleH, 4, poleH);
+    ctx.fillStyle = '#c0392b';
+    ctx.beginPath(); ctx.moveTo(p.x+2,p.y-poleH); ctx.lineTo(p.x+10,p.y-poleH+4); ctx.lineTo(p.x+2,p.y-poleH+8); ctx.closePath(); ctx.fill();
+  });
+
+  // The banner is a straight strip between the two pole tops -- which, under this projection,
+  // sits at a slant rather than dead level, since the two edges differ in both screen X and Y.
+  const topAngle = Math.atan2(p2.y - p1.y, p2.x - p1.x);
+  const nx = Math.sin(topAngle) * bh, ny = -Math.cos(topAngle) * bh; // perpendicular offset, banner thickness
+
+  ctx.save();
+  ctx.beginPath();
+  ctx.moveTo(p1.x, p1.y-poleH); ctx.lineTo(p2.x, p2.y-poleH);
+  ctx.lineTo(p2.x+nx, p2.y-poleH+ny); ctx.lineTo(p1.x+nx, p1.y-poleH+ny);
+  ctx.closePath(); ctx.clip();
+  const steps = 16;
+  for (let i=0;i<steps;i++){
+    const t0=i/steps, t1=(i+1)/steps;
+    const x0 = p1.x+(p2.x-p1.x)*t0, y0 = p1.y-poleH+(p2.y-p1.y)*t0;
+    const x1 = p1.x+(p2.x-p1.x)*t1, y1 = p1.y-poleH+(p2.y-p1.y)*t1;
+    ctx.fillStyle = i%2===0 ? '#fff' : '#222';
+    ctx.beginPath();
+    ctx.moveTo(x0,y0); ctx.lineTo(x1,y1); ctx.lineTo(x1+nx,y1+ny); ctx.lineTo(x0+nx,y0+ny);
+    ctx.closePath(); ctx.fill();
+  }
+  ctx.restore();
+  ctx.strokeStyle = 'rgba(0,0,0,0.6)'; ctx.lineWidth = 1;
+  ctx.beginPath();
+  ctx.moveTo(p1.x, p1.y-poleH); ctx.lineTo(p2.x, p2.y-poleH);
+  ctx.lineTo(p2.x+nx, p2.y-poleH+ny); ctx.lineTo(p1.x+nx, p1.y-poleH+ny); ctx.closePath(); ctx.stroke();
+
+  // Rotate the text to match the banner's own slant so it reads as painted on the strip,
+  // rather than floating level while the strip beneath it tilts.
+  const midX = (p1.x+p2.x)/2 + nx/2, midY = (p1.y+p2.y)/2 - poleH + ny/2;
+  ctx.save();
+  ctx.translate(midX, midY);
+  ctx.rotate(topAngle);
+  ctx.fillStyle = '#000'; ctx.font = 'bold 11px monospace'; ctx.textAlign = 'center';
+  ctx.fillText('FINISH', 0, 4);
+  ctx.restore();
+}
+
+// Simpler starting-line marker: same full-width checkered treatment as the finish, shorter
+// poles, small green "go" flags instead of a full banner+text arch.
+function drawStartLine(ctx, camZ, camLane, anchorX, anchorY){
+  const p1 = project(0, TRACK_RENDER_LANE_MIN, camZ, camLane, anchorX, anchorY);
+  const p2 = project(0, TRACK_RENDER_LANE_MAX, camZ, camLane, anchorX, anchorY);
+  const poleH = 32;
+  [p1,p2].forEach(p=>{
+    ctx.fillStyle = '#e0e0e0';
+    ctx.fillRect(p.x-2, p.y-poleH, 4, poleH);
+    ctx.fillStyle = '#2ecc71';
+    ctx.beginPath(); ctx.moveTo(p.x+2,p.y-poleH); ctx.lineTo(p.x+9,p.y-poleH+3); ctx.lineTo(p.x+2,p.y-poleH+6); ctx.closePath(); ctx.fill();
+  });
+  const midX = (p1.x+p2.x)/2, midY = Math.min(p1.y,p2.y) - poleH;
+  ctx.fillStyle = 'rgba(0,0,0,0.75)'; ctx.font = 'bold 8px monospace'; ctx.textAlign = 'center';
+  ctx.fillText('START', midX, midY-4);
+}
+
+/* =========================================================================================
+   RENDERING -- ducks
+   ========================================================================================= */
+function drawLeg(ctx, hipX, hipY, footX, footY, color){
+  ctx.strokeStyle = color; ctx.lineWidth = 1.6;
+  ctx.beginPath(); ctx.moveTo(hipX,hipY); ctx.lineTo(footX,footY); ctx.stroke();
+  ctx.fillStyle = color;
+  ctx.beginPath(); ctx.ellipse(footX,footY,2.3,1.3,0,0,Math.PI*2); ctx.fill();
+  ctx.strokeStyle = 'rgba(0,0,0,0.7)'; ctx.lineWidth = 0.6; ctx.stroke();
+}
+
+function drawDuck(ctx, screenX, screenY, duck){
+  const bobOffset = duck.state==='RUNNING' ? Math.abs(Math.sin(duck.bob))*2 : 0;
+  let lift = 0, submerge = 0, wings = 'none', tilt = 0;
+  if (duck.state === 'FLYING'){ lift = 26; wings = 'spread'; }
+  else if (duck.state === 'SWIMMING'){ submerge = 0.55; }
+  else if (duck.state === 'ON_LOG'){ lift = 3; }
+  else if (duck.state === 'RESPAWNING'){ lift = Math.max(0, 20 - (RESPAWN_DURATION-duck.respawnTimer)*30); tilt = 0.5; }
+  // Jump arc -- a quick parabolic hop, independent of ground state, for clearing obstacles.
+  if (duck.jumpTimer > 0) lift = Math.max(lift, Math.sin((1 - duck.jumpTimer/JUMP_DURATION) * Math.PI) * 15);
+  const cy = screenY - bobOffset;
+  const bodyY = cy - lift + submerge*6;
+
+  ctx.save();
+  if (tilt){ ctx.translate(screenX,cy); ctx.rotate(tilt); ctx.translate(-screenX,-cy); }
+
+  ctx.save(); ctx.globalAlpha = Math.max(0.15, 0.4 - lift*0.01);
+  ctx.beginPath(); ctx.ellipse(screenX, cy, 9-lift*0.05, 3.5, 0,0,Math.PI*2); ctx.fillStyle='#000'; ctx.fill(); ctx.restore();
+
+  // Legs: a quick alternating running stride on solid ground, tucked back into a single
+  // trailing pair while airborne -- driven by the same bob timer used for the body's hop.
+  if (duck.state==='RUNNING' || duck.state==='STUMBLE' || duck.state==='ON_LOG'){
+    const s1 = Math.sin(duck.bob)*3.5, s2 = Math.sin(duck.bob+Math.PI)*3.5;
+    drawLeg(ctx, screenX-2, bodyY+5, screenX-2+s1, bodyY+9, '#e8a33d');
+    drawLeg(ctx, screenX+2, bodyY+5, screenX+2+s2, bodyY+9, '#e8a33d');
+  } else if (duck.state==='FLYING' || duck.state==='RESPAWNING'){
+    drawLeg(ctx, screenX-3, bodyY+3, screenX-15, bodyY+5, '#e8a33d');
+    drawLeg(ctx, screenX+0, bodyY+4, screenX-12, bodyY+7, '#e8a33d');
+  }
+
+  if (wings==='spread'){
+    // Flap cycle: both wings rise/fall and tilt together (real flapping, not a static glide
+    // pose), driven by the same bob timer that's bumped to a faster rate while FLYING.
+    const flap = Math.sin(duck.bob) * 3.5;
+    const flapAngle = flap * 0.05;
+    ctx.strokeStyle='rgba(0,0,0,0.6)'; ctx.lineWidth=1;
+    ctx.beginPath(); ctx.ellipse(screenX-12, bodyY-2+flap, 8,3.5,0.3+flapAngle,0,Math.PI*2); ctx.fillStyle=shade(duck.color,-15); ctx.fill(); ctx.stroke();
+    ctx.beginPath(); ctx.ellipse(screenX+12, bodyY-2+flap, 8,3.5,-0.3-flapAngle,0,Math.PI*2); ctx.fillStyle=shade(duck.color,-15); ctx.fill(); ctx.stroke();
+  }
+
+  // Body + tail: bold black outline throughout (classic pixel-duck look) with a small upturned
+  // tail tuft at the rear -- the single detail that reads as "duck" silhouette at a glance.
+  ctx.save();
+  if (submerge>0){ ctx.beginPath(); ctx.rect(screenX-16,bodyY-11,32,11+(1-submerge)*8); ctx.clip(); }
+  ctx.beginPath();
+  ctx.moveTo(screenX-7, bodyY-1); ctx.lineTo(screenX-11, bodyY-7); ctx.lineTo(screenX-3, bodyY-4);
+  ctx.closePath(); ctx.fillStyle = shade(duck.color,-10); ctx.fill();
+  ctx.strokeStyle = '#1a1a1a'; ctx.lineWidth = 1; ctx.stroke();
+  ctx.beginPath(); ctx.ellipse(screenX,bodyY,8,6,0,0,Math.PI*2); ctx.fillStyle=duck.color; ctx.fill();
+  ctx.strokeStyle='#1a1a1a'; ctx.lineWidth=1.2; ctx.stroke();
+  ctx.restore();
+
+  // Head: rounder head, a light blue-grey "cap" marking, a small dark eye, and a bigger
+  // more prominent orange beak -- all outlined to match the reference duck sprite's style.
+  ctx.beginPath(); ctx.ellipse(screenX+5,bodyY-6,4.5,4.5,0,0,Math.PI*2);
+  ctx.fillStyle=duck.color; ctx.fill(); ctx.strokeStyle='#1a1a1a'; ctx.lineWidth=1.2; ctx.stroke();
+  ctx.beginPath(); ctx.ellipse(screenX+4,bodyY-9, 3,1.6,-0.3,0,Math.PI*2);
+  ctx.fillStyle='rgba(206,228,238,0.95)'; ctx.fill();
+  ctx.beginPath(); ctx.arc(screenX+7,bodyY-7,0.9,0,Math.PI*2); ctx.fillStyle='#1a1a1a'; ctx.fill();
+  ctx.beginPath(); ctx.moveTo(screenX+9,bodyY-6.5); ctx.lineTo(screenX+16,bodyY-5); ctx.lineTo(screenX+9,bodyY-2.5); ctx.closePath();
+  ctx.fillStyle='#e8a33d'; ctx.fill();
+  ctx.strokeStyle='#1a1a1a'; ctx.lineWidth=0.8; ctx.stroke();
+  if (submerge>0){ ctx.strokeStyle='rgba(255,255,255,0.5)'; ctx.beginPath(); ctx.ellipse(screenX,cy+2,12,3.5,0,0,Math.PI*2); ctx.stroke(); }
+  ctx.restore();
+
+  // Flight stamina bar -- only relevant (and only drawn) near/inside a canyon, fades elsewhere.
+  const biome = getBiomeAt(duck.z);
+  if (biome === 'canyon' || duck.state === 'FLYING' || duck.state === 'RESPAWNING'){
+    const bx=screenX-11, by=bodyY-lift-18-7, bw=22, bh=4;
+    ctx.fillStyle='rgba(0,0,0,0.5)'; ctx.fillRect(bx-1,by-1,bw+2,bh+2);
+    ctx.fillStyle='#333'; ctx.fillRect(bx,by,bw,bh);
+    ctx.fillStyle = duck.stamina>0.3 ? '#5fd35f' : '#e84c3d';
+    ctx.fillRect(bx,by,bw*Math.max(0,duck.stamina),bh);
+  }
+}
+
+/* =========================================================================================
+   HUD -- fixed screen-space overlay drawn on top of the world every frame; never a separate
+   panel carved out of the canvas. Right-side vertical bar = race progress (checkered flag at
+   the top = finish); bottom buttons mirror the touch controls, with a ring meter around Boost.
+   ========================================================================================= */
+function drawHUD(ducks){
+  const ctx = gctx;
+  const barX = W-16, barTop = 22, barBottom = H-100;
+  ctx.fillStyle='rgba(0,0,0,0.45)'; ctx.fillRect(barX-7,barTop-14,20,barBottom-barTop+28);
+  for (let i=0;i<4;i++){ ctx.fillStyle=i%2===0?'#fff':'#222'; ctx.fillRect(barX-5+(i%2)*5, barTop-11+Math.floor(i/2)*5,5,5); }
+  ducks.forEach(d=>{
+    const pct = Math.max(0, Math.min(1, d.z/FINISH_Z));
+    const y = barBottom - pct*(barBottom-barTop);
+    ctx.beginPath(); ctx.arc(barX,y, d.isPlayer?4:3, 0, Math.PI*2);
+    ctx.fillStyle = d.color; ctx.fill(); ctx.strokeStyle='#000'; ctx.stroke();
+  });
+
+  const player = ducks.find(d=>d.isPlayer);
+  const cy = H-40;
+  function btn(x,txt,fill){
+    ctx.beginPath(); ctx.arc(x,cy,18,0,Math.PI*2); ctx.fillStyle=fill; ctx.fill();
+    ctx.strokeStyle='rgba(255,255,255,0.5)'; ctx.stroke();
+    ctx.fillStyle='#fff'; ctx.font='13px monospace'; ctx.textAlign='center'; ctx.fillText(txt,x,cy+4);
+  }
+  btn(36,'◀','rgba(255,255,255,0.12)');
+  btn(W-36,'▶','rgba(255,255,255,0.12)');
+  ctx.beginPath(); ctx.arc(W/2,cy,21,-Math.PI/2,-Math.PI/2 + Math.max(0,player.boost)*Math.PI*2);
+  ctx.strokeStyle='#f4d03f'; ctx.lineWidth=3; ctx.stroke();
+  btn(W/2,'B','rgba(244,208,63,0.22)');
+}
+
+/* =========================================================================================
+   MAIN GAME STATE + LOOP
+   ========================================================================================= */
+const canvas = document.getElementById('game');
+const gctx = canvas.getContext('2d');
+
+let player, ducks, raceOver, startTime;
+let gameStarted = false;   // gated behind the start banner -- rendering still runs so the
+                            // scene isn't blank behind it, but ducks/AI/race logic hold still
+let selectedRaceLength = 'medium';
+const input = { left:false, right:false, boost:false, jump:false };
+
+let finishOrder = [];
+
+function resetRace(){
+  buildTrack(selectedRaceLength);
+  generateTrackContent();
+  player = makeDuck('#f4d03f', true);
+  player.x = 2;
+  const aiColors = ['#5dade2','#e67e22','#af7ac5'];
+  ducks = [player, ...aiColors.map(c => { const d = makeDuck(c,false); d.x = 1+Math.random()*3; return d; })];
+  raceOver = false;
+  finishOrder = [];
+  document.getElementById('overlay').classList.remove('show');
+}
+
+let lastT = 0;
+function frame(now){
+  if (!lastT) lastT = now;
+  const dt = Math.min(0.05, (now-lastT)/1000);
+  lastT = now;
+
+  if (gameStarted && !raceOver){
+    // NOTE: lane increases toward screen-left under this projection (x = (dz-dl)*TW/2, so
+    // larger lane -> smaller x) -- "right" input must therefore *decrease* lane, not increase it.
+    if (!player.finished) updateDuck(player, dt, now/1000, { steer: (input.left?1:0) - (input.right?1:0), boost: input.boost, jump: input.jump });
+    for (const d of ducks) if (!d.isPlayer && !d.finished) updateAI(d, dt, now/1000, player);
+    resolveBumps();
+
+    // AI can cross before the player without ending the race -- they park at the line (locking
+    // in their finish order for the results screen) and the race only actually ends once the
+    // PLAYER crosses.
+    for (const d of ducks){
+      if (!d.finished && d.z >= FINISH_Z){
+        d.finished = true;
+        d.z = FINISH_Z;
+        finishOrder.push(d);
+      }
+    }
+    if (player.finished) finishRace();
+  }
+
+  render(now);
+  requestAnimationFrame(frame);
+}
+
+function finishRace(){
+  raceOver = true;
+  const stillRacing = ducks.filter(d => !d.finished).sort((a,b)=>b.z-a.z);
+  const ranked = [...finishOrder, ...stillRacing];
+  const list = document.getElementById('results');
+  list.innerHTML = '';
+  ranked.forEach((d,i)=>{
+    const li = document.createElement('li');
+    li.textContent = `${i+1}. ${d.isPlayer ? 'YOU' : 'AI Duck'}`;
+    li.style.color = d.color;
+    list.appendChild(li);
+  });
+  document.getElementById('overlayTitle').textContent = ranked[0].isPlayer ? 'YOU WIN!' : 'RACE OVER';
+  document.getElementById('overlay').classList.add('show');
+}
+
+function render(now){
+  const t = now;
+  drawSky(gctx, t);
+
+  const anchorX = W/2, anchorY = H*0.7;
+  const camZ = player.z, camLane = player.x;
+
+  // terrain: far-to-near per biome; canyon rows split into rim (textured) + void (haze) so the
+  // gorge reads as an actual drop instead of more tiled rock, and it darkens toward mid-gorge.
+  // zMax reaches far enough that ground always fills the screen to the horizon -- with this
+  // projection and anchor, ~48 rows ahead is the worst case needed to cover the top edge across
+  // the full lane range, so 60 leaves headroom rather than leaving a visible cutoff.
+  const zMin = Math.floor(camZ) - 4, zMax = Math.floor(camZ) + 60;
+  for (let z = zMax; z >= zMin; z--){
+    const biome = getBiomeAt(z);
+    const seg = getSegmentAt(z);
+    for (let lane = -4; lane <= 8; lane++){
+      const p = project(z, lane, camZ, camLane, anchorX, anchorY);
+      if (p.x < -TILE_W*2 || p.x > W+TILE_W*2 || p.y < -TILE_H*3 || p.y > H+TILE_H*3) continue;
+      if (biome === 'canyon'){
+        const distToRim = Math.min(z - seg.start, seg.end - z);
+        if (distToRim < 0.5) drawCanyonRim(gctx, p.x, p.y, TILE_W, TILE_H, z, lane);
+        else drawChasmVoid(gctx, p.x, p.y, TILE_W, TILE_H, distToRim);
+      } else if (biome === 'river') drawWaterTile(gctx, p.x, p.y, TILE_W, TILE_H, t, z);
+      else if (biome === 'desert') drawDesertTile(gctx, p.x, p.y, TILE_W, TILE_H, z, lane);
+      else drawGrassTile(gctx, p.x, p.y, TILE_W, TILE_H, z, lane, biome === 'forest');
+
+      // checkered ground marking spanning the *entire* rendered width, under the banner arch --
+      // matches lane's parity across the whole shoulder, not just the 5 playable lanes.
+      if (Math.abs(z - FINISH_Z) < 0.5){
+        drawDiamond(gctx, p.x, p.y, TILE_W, TILE_H, (Math.floor(lane)%2===0) ? 'rgba(255,255,255,0.6)' : 'rgba(15,15,15,0.6)', null);
+      } else if (Math.abs(z - 0) < 0.5){
+        drawDiamond(gctx, p.x, p.y, TILE_W, TILE_H, (Math.floor(lane)%2===0) ? 'rgba(255,255,255,0.6)' : 'rgba(30,140,60,0.6)', null);
+      }
+    }
+  }
+
+  if (FINISH_Z >= zMin && FINISH_Z <= zMax) drawFinishBanner(gctx, camZ, camLane, anchorX, anchorY);
+  if (0 >= zMin && 0 <= zMax) drawStartLine(gctx, camZ, camLane, anchorX, anchorY);
+
+  // mist inside canyon segments in view
+  for (const seg of TRACK){
+    if (seg.biome !== 'canyon' || seg.end < zMin || seg.start > zMax) continue;
+    for (let i=0;i<4;i++){
+      const z = seg.start + (seg.end-seg.start)*((i+0.5)/4);
+      const lane = 0.5 + hash(seg.start,i)*4;
+      const p = project(z, lane, camZ, camLane, anchorX, anchorY);
+      drawChasmMist(gctx, p.x, p.y, t, i+seg.start);
+    }
+  }
+
+  // obstacles
+  for (const o of obstacles){
+    if (o.z < zMin || o.z > zMax) continue;
+    const h = getBiomeAt(o.z)==='desert' ? 0 : hillHeight(o.z, o.lane);
+    const p = project(o.z, o.lane, camZ, camLane, anchorX, anchorY);
+    if (o.type === 'tree') drawTree(gctx, p.x, p.y-h, o.variant, o.scale);
+    else if (o.type === 'boulder') drawBoulder(gctx, p.x, p.y-h, o.scale);
+    else drawCactus(gctx, p.x, p.y-h, o.scale);
+  }
+  // logs
+  for (const log of logs){
+    if (log.zCenter < zMin || log.zCenter > zMax) continue;
+    const lane = logLaneAt(log, t/1000);
+    const p = project(log.zCenter, lane, camZ, camLane, anchorX, anchorY);
+    drawLog(gctx, p.x, p.y, TILE_W*1.5);
+  }
+
+  // ducks: far-to-near so nearer ducks draw on top
+  const sorted = [...ducks].sort((a,b)=>b.z-a.z);
+  for (const d of sorted){
+    const p = project(d.z, d.x, camZ, camLane, anchorX, anchorY);
+    const h = getBiomeAt(d.z)==='grass' || getBiomeAt(d.z)==='forest' ? hillHeight(d.z,d.x) : 0;
+    drawDuck(gctx, p.x, p.y - h, d);
+  }
+
+  drawHUD(ducks);
+}
+
+/* =========================================================================================
+   INPUT -- touchstart fires immediately (zero lag), touchend just clears the pressed state.
+   ========================================================================================= */
+function bindButton(el, onDown, onUp){
+  const start = (e)=>{ e.preventDefault(); onDown(); el.classList.add('active'); };
+  const end = (e)=>{ e.preventDefault(); onUp(); el.classList.remove('active'); };
+  el.addEventListener('touchstart', start, {passive:false});
+  el.addEventListener('touchend', end, {passive:false});
+  el.addEventListener('touchcancel', end, {passive:false});
+  el.addEventListener('mousedown', start);
+  el.addEventListener('mouseup', end);
+  el.addEventListener('mouseleave', end);
+}
+bindButton(document.getElementById('btnLeft'),  ()=>input.left=true,  ()=>input.left=false);
+bindButton(document.getElementById('btnRight'), ()=>input.right=true, ()=>input.right=false);
+bindButton(document.getElementById('btnBoost'), ()=>input.boost=true, ()=>input.boost=false);
+bindButton(document.getElementById('btnJump'),  ()=>input.jump=true,  ()=>input.jump=false);
+// WASD mirrors the arrow keys 1:1 (A/D = steer, W = boost). Jump gets its own key (Space)
+// rather than sharing Boost's, since both can matter in the same moment.
+const LEFT_KEYS = ['ArrowLeft', 'a', 'A'];
+const RIGHT_KEYS = ['ArrowRight', 'd', 'D'];
+const BOOST_KEYS = ['ArrowUp', 'w', 'W'];
+const JUMP_KEYS = [' '];
+document.addEventListener('keydown', e=>{
+  if (LEFT_KEYS.includes(e.key)) input.left=true;
+  if (RIGHT_KEYS.includes(e.key)) input.right=true;
+  if (BOOST_KEYS.includes(e.key)) input.boost=true;
+  if (JUMP_KEYS.includes(e.key)){ input.jump=true; e.preventDefault(); }
+});
+document.addEventListener('keyup', e=>{
+  if (LEFT_KEYS.includes(e.key)) input.left=false;
+  if (RIGHT_KEYS.includes(e.key)) input.right=false;
+  if (BOOST_KEYS.includes(e.key)) input.boost=false;
+  if (JUMP_KEYS.includes(e.key)) input.jump=false;
+});
+document.getElementById('restartBtn').addEventListener('click', resetRace);
+document.querySelectorAll('.lengthBtn').forEach(btn=>{
+  btn.addEventListener('click', ()=>{
+    selectedRaceLength = btn.dataset.len;
+    document.querySelectorAll('.lengthBtn').forEach(b=>b.classList.remove('selected'));
+    btn.classList.add('selected');
+  });
+});
+document.getElementById('startBtn').addEventListener('click', ()=>{
+  document.getElementById('startOverlay').classList.add('hide');
+  gameStarted = true;
+});
+document.addEventListener('touchmove', e=>e.preventDefault(), {passive:false});
+document.addEventListener('gesturestart', e=>e.preventDefault());
+
+/* =========================================================================================
+   RESPONSIVE SCALING -- fixed internal resolution, scaled via CSS to fit the viewport while
+   keeping the pixel-art crisp (image-rendering: pixelated) and the aspect ratio intact.
+   ========================================================================================= */
+function resize(){
+  const scale = Math.min(window.innerWidth/W, window.innerHeight/H);
+  canvas.style.width = (W*scale) + 'px';
+  canvas.style.height = (H*scale) + 'px';
+}
+window.addEventListener('resize', resize);
+resize();
+
+resetRace();
+requestAnimationFrame(frame);
+</script>
+</body>
+</html>
